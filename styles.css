@@ -3045,6 +3045,8 @@ summary:focus-visible {
   --radius-strong: 1.2rem;
   --surface-veil: linear-gradient(160deg, rgba(255, 255, 255, 0.042), rgba(255, 255, 255, 0.01));
   --edge-light: rgba(162, 212, 255, 0.2);
+  --glow-cyan: rgba(76, 210, 212, 0.36);
+  --glow-gold: rgba(240, 205, 135, 0.28);
 }
 
 body {
@@ -3090,15 +3092,34 @@ body {
   padding: 7.8rem 0 5.5rem;
 }
 
+.hero::before {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(76, 210, 212, 0.26), transparent 32%),
+    radial-gradient(circle at 84% 24%, rgba(240, 205, 135, 0.2), transparent 34%),
+    radial-gradient(circle at 50% 84%, rgba(76, 210, 212, 0.12), transparent 44%);
+  animation: hero-atmo-pulse 6.6s ease-in-out infinite;
+}
+
 .hero-copy {
   gap: 1.15rem;
 }
 
 .hero h1 {
   line-height: 0.74;
+  color: #eef8ff;
+  background: linear-gradient(180deg, #f2f8ff 0%, #cdeff0 48%, #8fd5d7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   text-shadow:
     0 0 20px rgba(31, 183, 185, 0.24),
     0 0 46px rgba(158, 163, 168, 0.1);
+}
+
+.hero h1::after {
+  box-shadow:
+    0 0 14px rgba(31, 183, 185, 0.36),
+    0 0 24px rgba(240, 205, 135, 0.16);
 }
 
 .lead {
@@ -3116,6 +3137,16 @@ body {
 .btn-primary {
   background: linear-gradient(140deg, #d7dee0 0%, #39c4c6 46%, #0f5f63 100%);
   box-shadow: 0 16px 30px rgba(18, 113, 117, 0.32);
+}
+
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.36), transparent 42%);
+  opacity: 0.54;
 }
 
 .btn-primary:hover {
@@ -3157,6 +3188,8 @@ body {
     linear-gradient(220deg, rgba(158, 163, 168, 0.08), transparent 46%),
     rgba(255, 255, 255, 0.018);
   box-shadow: 0 16px 30px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(7px);
+  background-blend-mode: screen, normal, normal, normal;
 }
 
 .card:hover,
@@ -3170,6 +3203,37 @@ body {
   box-shadow:
     0 22px 38px rgba(0, 0, 0, 0.44),
     0 0 0 1px rgba(31, 183, 185, 0.16);
+}
+
+.hero-panel,
+.unit-narrative,
+.unit-dossier,
+.showcase-box,
+.doctrine-box {
+  box-shadow:
+    0 24px 44px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(106, 169, 255, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.main-nav a.is-active {
+  box-shadow:
+    inset 0 0 0 1px rgba(31, 183, 185, 0.22),
+    0 10px 20px rgba(0, 0, 0, 0.38),
+    0 0 18px rgba(76, 210, 212, 0.12);
+}
+
+@keyframes hero-atmo-pulse {
+  0%,
+  100% {
+    opacity: 0.88;
+    filter: saturate(0.95) brightness(0.95);
+  }
+
+  50% {
+    opacity: 1;
+    filter: saturate(1.08) brightness(1.02);
+  }
 }
 
 .container > h2 {
@@ -3276,6 +3340,10 @@ body.is-transitioning .page-transition-overlay {
   .hero-copy::after,
   .hero .container::before,
   .hero .container::after {
+    animation: none;
+  }
+
+  .hero::before {
     animation: none;
   }
 }
