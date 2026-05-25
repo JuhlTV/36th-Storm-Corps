@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Operations-Hub | 36th Storm Corps</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="page-operations">
+  <a class="skip-link" href="#main-content">Zum Inhalt springen</a>
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="site-header" id="top">
+    <div class="container nav-wrap">
+      <a href="index.html" class="brand" aria-label="Zur Hauptseite">
+        <span class="brand-mark">36</span>
+        <span class="brand-text">STORM CORPS</span>
+      </a>
+      <nav class="main-nav" aria-label="Hub Navigation">
+        <a href="index.html">Hauptseite</a>
+        <a href="lore-codex.html">Lore-Codex</a>
+        <a href="admin-console.html">Admin-Konsole</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" style="padding-top: 1rem;">
+    <section class="statusboard section-reveal">
+      <div class="container">
+        <p class="eyebrow">Command Operations Archive</p>
+        <h1>Operations-Hub</h1>
+        <p class="lead">Hier wird der laufende Serverbetrieb erklaert und gebuendelt: Einsatzfenster, Bereitschaft, Planung und Auszeichnungen in einer Kommandouebersicht.</p>
+        <div class="statusboard-grid">
+          <article><span>Heutige Einsaetze</span><strong id="sb-today-ops">0</strong></article>
+          <article><span>Bereitschaftsstufe</span><strong id="sb-readiness">Aurek-1</strong></article>
+          <article><span>Funkkanal</span><strong id="sb-channel">COM-NET 36.7</strong></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="calendar section-reveal">
+      <div class="container">
+        <p class="eyebrow">Einsatzkalender</p>
+        <h2>Trainings, Einsaetze, Briefings</h2>
+        <p class="lead">Der Kalender bildet den Rhythmus des Servers ab: wann trainiert wird, wann Missionsstart ist und wann Briefings stattfinden.</p>
+        <div class="calendar-list" id="calendar-list"></div>
+      </div>
+    </section>
+
+    <section class="medals section-reveal">
+      <div class="container">
+        <p class="eyebrow">Medaillen & Auszeichnungen</p>
+        <h2>Orden der 36th</h2>
+        <p class="lead">Auszeichnungen zeigen, welche Leistungen im Serverkontext gezaehlt werden: Verlaesslichkeit, Einsatzqualitaet und Teamverhalten.</p>
+        <div class="medal-grid" id="medal-grid"></div>
+      </div>
+    </section>
+
+    <section class="records section-reveal">
+      <div class="container">
+        <p class="eyebrow">Einsatzakten</p>
+        <h2>Vorschau auf Einsatzakten</h2>
+        <div class="record-grid">
+          <article class="record-card">
+            <h3>Operation Geonosis</h3>
+            <p class="record-meta">Sektor: Geonosis | Dauer: Erster Kriegseinsatz</p>
+            <p>Der Auftakt der Einheit im Clone-Wars-Feld: Lage sichern, Kontakt aufnehmen, Struktur herstellen.</p>
+            <p class="record-result">Resultat: Einsatzbereit</p>
+          </article>
+          <article class="record-card">
+            <h3>Operation Frontline Drill</h3>
+            <p class="record-meta">Sektor: Republic Grid | Dauer: laufend</p>
+            <p>Praezisionsuebungen fuer Aufklaerung, Absicherung und koordinierte Teambewegung.</p>
+            <p class="record-result">Resultat: Training Active</p>
+          </article>
+          <article class="record-card">
+            <h3>Operation Republic Relay</h3>
+            <p class="record-meta">Sektor: Republic Grid | Dauer: planbar</p>
+            <p>Kommunikation, Funkdisziplin und Reaktionswege werden unter simuliertem Druck getestet.</p>
+            <p class="record-result">Resultat: Ready</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

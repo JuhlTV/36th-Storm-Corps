@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>36th Storm Corps | Spezialisierte Cloneinheit</title>
+  <meta
+    name="description"
+    content="Serious Hardcore RP Server der 36th Storm Corps: klare Befehlsketten, diszipliniertes Clone-Wars-RP, feste Standards, Einsaetze und strukturierte Teamrollen."
+  />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="intro-active">
+  <a class="skip-link" href="#main-content">Zum Inhalt springen</a>
+  <div class="noise" aria-hidden="true"></div>
+
+  <section class="briefing-screen" id="briefing-screen" aria-label="Holonet Opening Crawl">
+    <div class="briefing-crawl-viewport">
+      <div class="briefing-crawl-perspective">
+        <div class="briefing-crawl-content">
+          <p class="briefing-label">Republic Tactical Briefing</p>
+          <h1>Grand Army of the Republic</h1>
+          <p class="briefing-unit">Unit: 36th Storm Corps | Clearance: Aurek-36</p>
+          <div class="briefing-crawl-text" id="briefing-crawl-copy" aria-live="polite">
+            <p>Die 36th Storm Corps tritt den Krieg nicht als Legende an, sondern als praezise republikanische Einsatzformation.</p>
+            <p>Seit Geonosis steht die Einheit fuer Disziplin, saubere Befehlswege und schnelle Reaktion unter Druck.</p>
+            <p>Mit jeder Rotation der Clone Wars wird der Auftrag klarer: Patrouillen sichern, Kontakte binden, Lücken schließen und den Raum fuer die Republik halten.</p>
+            <p>Keine Show. Keine leeren Phrasen. Nur klare Ziele, ruhige Kommunikation und ein Corps, das im Schatten genauso kontrolliert arbeitet wie an der Front.</p>
+            <p>Wenn der Holonet-Eintrag endet, beginnt der Einsatz: sichern, markieren, absichern, durchziehen.</p>
+            <p>Die 36th bleibt dabei auf Kurs, bis der Auftrag erfuellt ist und der letzte Statusbericht sauber im Archiv landet.</p>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary briefing-enter" id="briefing-enter" type="button">Ueberspringen</button>
+      <button class="briefing-sound-toggle" id="briefing-sound-toggle" type="button" aria-pressed="false">SFX: OFF</button>
+      <p class="briefing-audio-hint" id="briefing-audio-hint" hidden>Musik startet beim naechsten Klick.</p>
+    </div>
+  </section>
+
+  <audio id="briefing-music" preload="auto" src="KlonkriegerFanfare.wav" aria-hidden="true"></audio>
+
+  <header class="site-header" id="top">
+    <div class="container nav-wrap">
+      <a href="#top" class="brand" aria-label="Startseite 36th Storm Corps">
+        <span class="brand-mark">36</span>
+        <span class="brand-text">STORM CORPS</span>
+      </a>
+
+      <button class="menu-toggle" aria-expanded="false" aria-controls="main-nav" aria-label="Menue oeffnen">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav id="main-nav" class="main-nav" aria-label="Hauptnavigation">
+        <div class="nav-dropdown">
+          <button class="dropdown-toggle" id="unit-menu-toggle" type="button" aria-expanded="false" aria-controls="unit-menu">
+            Einheit
+          </button>
+          <div class="dropdown-menu" id="unit-menu">
+            <a href="#server-info">Server-Info</a>
+            <a href="#onboarding">Neulings-Guide</a>
+            <a href="#einheit">Einheitsprofil</a>
+            <a href="#trailer">Einheitstrailer</a>
+            <a href="#leitung">Einheitsleitung</a>
+            <a href="#dienstgrade">Dienstgrade</a>
+            <a href="#spezialisierungen">Spezialisierungen</a>
+            <a href="#faehigkeiten">Faehigkeiten</a>
+            <a href="#squads">Squad Leads</a>
+            <a href="#mitglieder">Mitglieder</a>
+            <a href="operations-hub.html">Operations-Hub</a>
+            <a href="lore-codex.html">Lore-Codex</a>
+            <a href="admin-console.html">Admin-Konsole</a>
+          </div>
+        </div>
+        <a href="operations-hub.html">Operations-Hub</a>
+        <a href="#server-info">Server-Info</a>
+        <a href="#onboarding">Neulings-Guide</a>
+        <a href="#taktik">Tactical Map</a>
+        <a href="#kalender">Kalender</a>
+        <a href="#mitglieder">Mitglieder</a>
+        <a href="lore-codex.html">Lore</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="hero section-reveal">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">Republic Covert Strike Corps</p>
+          <h1>36th Storm Corps</h1>
+          <p class="tagline">Unsichtbar im Anflug. Endgueltig im Zugriff.</p>
+          <p class="lead">
+            Dieser Server steht fuer Serious Hardcore RP: klare Befehlsketten, hohe Disziplin,
+            konsequente Konsequenzen und taktische Teamarbeit unter Druck.
+            Wer hier eintritt, erwartet kein Casual-RP, sondern eine fordernde Clone-Wars-Operationsumgebung.
+          </p>
+          <div class="hero-actions">
+            <a href="#onboarding" class="btn btn-primary">Neulinge starten hier</a>
+            <a href="#server-info" class="btn btn-ghost">Server-Info</a>
+            <a href="lore-codex.html" class="btn btn-ghost">Unsere Doktrin</a>
+          </div>
+        </div>
+
+        <aside class="hero-panel" aria-label="Einheitsprofil">
+          <h2>Corps-Profil</h2>
+          <ul>
+            <li><span>Fraktion</span><strong>Galactic Republic</strong></li>
+            <li><span>Rolle</span><strong>Behind-Front Operations</strong></li>
+            <li><span>Fokus</span><strong>Stealth | Sabotage | Aufklaerung</strong></li>
+            <li><span>Einsatzweise</span><strong>Kleine autonome Teams</strong></li>
+            <li><span>Doktrin</span><strong>Ohne Jedi-Fuehrung</strong></li>
+            <li><span>Serverstil</span><strong>Serious Hardcore RP</strong></li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <section id="server-info" class="capabilities section-reveal">
+      <div class="container">
+        <p class="eyebrow">Server-Info</p>
+        <h2>Was euch auf dem Server erwartet</h2>
+        <p class="lead">
+          Der 36th-Server ist auf Serious Hardcore RP ausgelegt: ruhiges, glaubwuerdiges Soldaten-RP,
+          klare Verantwortung pro Rang und konsequente Umsetzung von Befehlen, Funkdisziplin und Einsatzregeln.
+        </p>
+        <div class="card-grid">
+          <article class="card">
+            <h3>Projektstil</h3>
+            <p>Das Projekt laeuft wie ein Arma 3 Milsim Star Wars Clan: strukturiert, taktisch und teamorientiert.</p>
+          </article>
+          <article class="card">
+            <h3>RP-Standard</h3>
+            <p>Kein Fun-Round-Ansatz. Entscheidungen haben Gewicht, Fehler haben In-Character-Folgen.</p>
+          </article>
+          <article class="card">
+            <h3>Struktur</h3>
+            <p>Feste Befehlskette, klare Rollen je Squad und verbindliche Funk- und Einsatzprotokolle.</p>
+          </article>
+          <article class="card">
+            <h3>Spielweise</h3>
+            <p>Taktische Teamarbeit, disziplinierte Kommunikation und Missionen mit klaren Zielen statt Chaos.</p>
+          </article>
+          <article class="card">
+            <h3>Anspruch</h3>
+            <p>Geeignet fuer Spieler, die konstantes Clone-Wars-RP mit Ernsthaftigkeit und Ausdauer suchen.</p>
+          </article>
+          <article class="card">
+            <h3>Fortschritt</h3>
+            <p>Aufstieg ueber Leistung im Einsatz, Verlaesslichkeit in der Kette und saubere Teamfuehrung.</p>
+          </article>
+          <article class="card">
+            <h3>Onboarding</h3>
+            <p>Neue Spieler stellen zuerst ihren IC-Charakter vor, starten als Trooper/Private und wachsen ueber Einsaetze weiter.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="onboarding" class="operations section-reveal">
+      <div class="container">
+        <p class="eyebrow">Neulings-Guide</p>
+        <h2>So findet ihr in das Projekt hinein</h2>
+        <p class="lead">
+          Der Einstieg ist klar aufgebaut und fuer neue User nachvollziehbar. So laeuft euer Weg in der Custom-Einheit ab.
+        </p>
+        <ol class="timeline">
+          <li>
+            <span>01</span>
+            <div>
+              <h3>IC-Char vorstellen</h3>
+              <p>Nach dem Join stellt ihr euren In-Character Clone vor und bekommt eure erste Einordnung im Corps.</p>
+            </div>
+          </li>
+          <li>
+            <span>02</span>
+            <div>
+              <h3>Als Trooper/Private starten</h3>
+              <p>Ihr werdet als Trooper bzw. Private aufgenommen und in die Befehlskette und Grundablaeufe eingefuehrt.</p>
+            </div>
+          </li>
+          <li>
+            <span>03</span>
+            <div>
+              <h3>Trainings und Events spielen</h3>
+              <p>Durch regelmaessige Trainings, Briefings und Events sammelt ihr Erfahrung im taktischen Serveralltag.</p>
+            </div>
+          </li>
+          <li>
+            <span>04</span>
+            <div>
+              <h3>Auffallen, aufsteigen, ausgezeichnet werden</h3>
+              <p>Wer durch Disziplin, Teamarbeit und Leistung auffaellt, kann Befoerderungen und Medaillen verdienen.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="newcomer-expectations" class="capabilities section-reveal">
+      <div class="container">
+        <p class="eyebrow">Was wir erwarten</p>
+        <h2>Standard fuer neue Leute im 36th-Projekt</h2>
+        <p class="lead">
+          Damit Serious Hardcore RP funktioniert, brauchen wir von neuen Mitgliedern klare Verbindlichkeit im Verhalten,
+          im Funk und im Auftreten als IC-Charakter.
+        </p>
+        <div class="card-grid">
+          <article class="card">
+            <h3>Aktivitaet</h3>
+            <p>Regelmaessige Teilnahme an Trainings und Events, damit Teamablaeufe und Vertrauen entstehen.</p>
+          </article>
+          <article class="card">
+            <h3>Funkdisziplin</h3>
+            <p>Kurze, klare Calls nach verbindlichem 10-Code-Standard, kein Durcheinanderfunken und konsequente Meldung entlang der Befehlskette.</p>
+            <p><a href="lore-codex.html">10-Codes im Lore-Codex ansehen</a></p>
+          </article>
+          <article class="card">
+            <h3>IC-Konstanz</h3>
+            <p>Der Charakter bleibt glaubwuerdig und einheitlich. Entscheidungen im Einsatz werden IC sauber ausgespielt.</p>
+          </article>
+          <article class="card">
+            <h3>Lernbereitschaft</h3>
+            <p>Feedback annehmen, Standards umsetzen und sich Schritt fuer Schritt in Rolle, Squad und Verantwortung entwickeln.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="trailer" class="trailer section-reveal">
+      <div class="container">
+        <p class="eyebrow">Schnellzugriff</p>
+        <h2>Server-Module im Ueberblick</h2>
+        <p class="lead">Alle Kernbereiche fuer den Serverbetrieb sind direkt erreichbar: Einsaetze, Lore und Administration.</p>
+        <div class="hero-actions">
+          <a href="operations-hub.html" class="btn btn-primary">Operations-Hub</a>
+          <a href="lore-codex.html" class="btn btn-ghost">Lore-Codex</a>
+          <a href="admin-console.html" class="btn btn-ghost">Admin-Konsole</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="einheit" class="unit-story section-reveal">
+      <div class="container">
+        <p class="eyebrow">Unsere Einheit</p>
+        <h2>Die 36th ist ein Corps, kein Bataillon fuer Paraden</h2>
+        <div class="unit-grid">
+          <article class="unit-narrative">
+            <h3>Wer wir sind</h3>
+            <p>
+              Die 36th Storm Corps operiert seit den ersten Tagen der Clone Wars, beginnend bei Geonosis.
+              Die Einheit steht fuer saubere Befehlsketten, verlassliche Teamarbeit und praezise Einsaetze.
+            </p>
+            <p>
+              Der Fokus liegt auf dem militärischen Alltag der Republik: Aufklaerung, Absicherung,
+              schnelle Reaktion und verlässliche Einsatzdisziplin.
+            </p>
+          </article>
+
+          <aside class="unit-dossier" aria-label="Dossier der Einheit">
+            <h3>Dossier</h3>
+            <p>Phase-I vor Geonosis.</p>
+            <ul>
+              <li><span>Gruendung</span><strong>Phase-I vor der ersten Schlacht von Geonosis</strong></li>
+              <li><span>Einsatzraum</span><strong>Clone-Wars-Schauplaetze der Republik</strong></li>
+              <li><span>Leitprinzip</span><strong>Disziplin, Teamfokus, Verlaesslichkeit</strong></li>
+              <li><span>Schwur</span><strong>Kein Bruder bleibt zurueck</strong></li>
+            </ul>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section id="spezialisierungen" class="specializations section-reveal">
+      <div class="container">
+        <p class="eyebrow">Einsatzmodule</p>
+        <h2>Die Einsatzmodule der Einheit</h2>
+        <div class="card-grid">
+          <article class="card">
+            <p class="class-badge class-badge-medic">CLS-MED</p>
+            <h3>Medic</h3>
+            <p>Stabilisierung unter Feuer, schnelle Triage und Einsatzrettung in verdeckten Szenarien.</p>
+          </article>
+          <article class="card">
+            <p class="class-badge class-badge-arf">CLS-ARF</p>
+            <h3>ARF (Advanced Recon Force)</h3>
+            <p>Tiefe Aufklaerung, Zielmarkierung und Lagebilderstellung fuer praezise Folgeschlaege.</p>
+          </article>
+          <article class="card">
+            <p class="class-badge class-badge-tech">CLS-TEC</p>
+            <h3>Techniker</h3>
+            <p>Systemzugriffe, Sensor-Manipulation, Kommunikationsstoerung und Feldreparaturen.</p>
+          </article>
+          <article class="card">
+            <p class="class-badge class-badge-standard">CLS-INF</p>
+            <h3>Standard-Infanterie</h3>
+            <p>Bodenkontakt, Stellungssicherung und Frontpraesenz ohne Spezialisierung.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="leitung" class="leadership section-reveal">
+      <div class="container">
+        <p class="eyebrow">Einheitsleitung</p>
+        <h2>Fuehrungsstruktur der 36th Storm Corps</h2>
+        <div class="lead-grid">
+          <article class="lead-card">
+            <p class="lead-role">Commanding Officer</p>
+            <h3>CC-2425 "Texer"</h3>
+            <p>Strategische Einsatzfreigaben, Endverantwortung fuer alle Deep-Front Operationen.</p>
+          </article>
+          <article class="lead-card">
+            <p class="lead-role">Executive Officer</p>
+            <h3>CC-2426 "Master"</h3>
+            <p>Koordiniert Einsatzrotation, Verstarkung und Absicherung der Exfil-Korridore.</p>
+          </article>
+          <article class="lead-card">
+            <p class="lead-role">Operations Sergeant Major</p>
+            <h3>CT-9999 "Pray"</h3>
+            <p>Taktische Umsetzung in Echtzeit, Anpassung bei Kontakt, Fuehrung unter Druck.</p>
+          </article>
+          <article class="lead-card">
+            <p class="lead-role">Medic Lead</p>
+            <h3>CT-4178 "Pulse"</h3>
+            <p>Trauma-Protokolle, Feldstabilisierung und medizinische Eioktrin der Einheit.</p>
+          </article>
+          <article class="lead-card">
+            <p class="lead-role">ARF Lead</p>
+            <h3>CT-3644 "Slate"</h3>
+            <p>Aufklaerungsbild, Zielpriorisierung, Sensor- und Observation-Netzwerk.</p>
+          </article>
+          <article class="lead-card">
+            <p class="lead-role">Technical Lead</p>
+            <h3>CT-4401 "Rift"</h3>
+            <p>Signalzugriff, elektronische Stoerung, Sicherheitsprotokolle und Feldreparatur.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="dienstgrade" class="ranks section-reveal">
+      <div class="container">
+        <p class="eyebrow">Dienstgrade</p>
+        <h2>Abzeichen-Panel der 36th</h2>
+        <div class="rank-group">
+          <p class="rank-subtitle">Offiziersrangfolge</p>
+          <div class="rank-grid">
+            <article class="rank-card officer-rank" data-grade="OF-6">
+              <div class="rank-insignia officer pips-6" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <h3>Senior Commander</h3>
+            </article>
+            <article class="rank-card officer-rank" data-grade="OF-5">
+              <div class="rank-insignia officer pips-5" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <h3>Commander</h3>
+            </article>
+            <article class="rank-card officer-rank" data-grade="OF-4">
+              <div class="rank-insignia officer pips-4" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <h3>Major</h3>
+            </article>
+            <article class="rank-card officer-rank" data-grade="OF-3">
+              <div class="rank-insignia officer pips-3" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <h3>Captain</h3>
+            </article>
+            <article class="rank-card officer-rank" data-grade="OF-2">
+              <div class="rank-insignia officer pips-2" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <h3>First Lieutenant</h3>
+            </article>
+            <article class="rank-card officer-rank" data-grade="OF-1">
+              <div class="rank-insignia officer pips-1" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <h3>Second Lieutenant</h3>
+            </article>
+          </div>
+        </div>
+
+        <div class="rank-group">
+          <p class="rank-subtitle">Unteroffiziere & Mannschaften</p>
+          <div class="rank-grid">
+            <article class="rank-card nco-rank" data-grade="OR-9">
+              <div class="rank-insignia enlisted ch-5 dt-4" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+                <i></i><i></i><i></i><i></i>
+              </div>
+              <h3>Sergeant Major</h3>
+            </article>
+            <article class="rank-card nco-rank" data-grade="OR-8">
+              <div class="rank-insignia enlisted ch-5 dt-3" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+                <i></i><i></i><i></i><i></i>
+              </div>
+              <h3>Master Sergeant</h3>
+            </article>
+            <article class="rank-card nco-rank" data-grade="OR-6">
+              <div class="rank-insignia enlisted ch-4 dt-3" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+                <i></i><i></i><i></i><i></i>
+              </div>
+              <h3>Sergeant</h3>
+            </article>
+            <article class="rank-card nco-rank" data-grade="OR-5">
+              <div class="rank-insignia enlisted ch-4 dt-2" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+                <i></i><i></i><i></i><i></i>
+              </div>
+              <h3>First Corporal</h3>
+            </article>
+            <article class="rank-card nco-rank" data-grade="OR-4A">
+              <div class="rank-insignia enlisted ch-3 dt-2" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+                <i></i><i></i><i></i><i></i>
+              </div>
+              <h3>Chief Corporal</h3>
+            </article>
+            <article class="rank-card nco-rank" data-grade="OR-4">
+              <div class="rank-insignia enlisted ch-3 dt-1" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+                <i></i><i></i><i></i><i></i>
+              </div>
+              <h3>Corporal</h3>
+            </article>
+            <article class="rank-card enlisted-rank" data-grade="OR-3">
+              <div class="rank-insignia enlisted ch-2 dt-1" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+                <i></i><i></i><i></i><i></i>
+              </div>
+              <h3>Specialist</h3>
+            </article>
+            <article class="rank-card enlisted-rank" data-grade="OR-2">
+              <div class="rank-insignia enlisted ch-1 dt-1" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+                <i></i><i></i><i></i><i></i>
+              </div>
+              <h3>Private First Class</h3>
+            </article>
+            <article class="rank-card enlisted-rank" data-grade="OR-1">
+              <div class="rank-insignia enlisted ch-1 dt-0" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span>
+                <i></i><i></i><i></i><i></i>
+              </div>
+              <h3>Private</h3>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="squads" class="squads section-reveal">
+      <div class="container">
+        <p class="eyebrow">Squad Leads</p>
+        <h2>Teamseiten-Layout fuer Einsatzgruppen</h2>
+        <div class="squad-grid">
+          <article class="squad-card">
+            <header>
+              <p class="squad-tag">Squad Aurek</p>
+              <h3>Lead: CT-36R7 "Vanta"</h3>
+            </header>
+            <p>ARF-Schwerpunktteam fuer Voraufklaerung, Markierung und First Contact Reports.</p>
+            <ul>
+              <li><span>Callsign-Netz</span><strong>Vanta-1 | Vanta-2 | Vanta-3</strong></li>
+              <li><span>Profil</span><strong>Stealth Recon & Tracking</strong></li>
+            </ul>
+            <a class="btn btn-ghost" href="squad-aurek.html">Detailseite</a>
+          </article>
+          <article class="squad-card">
+            <header>
+              <p class="squad-tag">Squad Besh</p>
+              <h3>Lead: CT-36T4 "Switch"</h3>
+            </header>
+            <p>Technikteam fuer Systemschnittstellen, Jammerfenster und Sensor-Denial.</p>
+            <ul>
+              <li><span>Callsign-Netz</span><strong>Switch-1 | Rift-2 | Arc-3</strong></li>
+              <li><span>Profil</span><strong>Electronic Warfare & Field Tech</strong></li>
+            </ul>
+            <a class="btn btn-ghost" href="squad-besh.html">Detailseite</a>
+          </article>
+          <article class="squad-card">
+            <header>
+              <p class="squad-tag">Squad Cresh</p>
+              <h3>Lead: CT-36M1 "Pulse"</h3>
+            </header>
+            <p>Medic-gefuehrtes Sicherungsteam fuer Stabilisierung, Holdpoint und Rettungskette.</p>
+            <ul>
+              <li><span>Callsign-Netz</span><strong>Pulse-1 | Mercy-2 | Halo-3</strong></li>
+              <li><span>Profil</span><strong>Combat Medic & Extraction</strong></li>
+            </ul>
+            <a class="btn btn-ghost" href="squad-cresh.html">Detailseite</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="mitglieder" class="members section-reveal">
+      <div class="container">
+        <p class="eyebrow">Interaktive Mitgliederliste</p>
+        <h2>Unteroffiziere ab Corporal</h2>
+        <p class="lead">Live-Suche und Filter fuer aktive Fuehrungs- und Frontline-Kraefte der 36th.</p>
+
+        <div class="member-controls" aria-label="Filter fuer Mitgliederliste">
+          <label>
+            <span>Suche</span>
+            <input type="search" id="member-search" placeholder="Name, Callsign oder CT-ID" />
+          </label>
+          <label>
+            <span>Rang</span>
+            <select id="member-rank">
+              <option value="all">Alle</option>
+              <option value="sergeant major">Sergeant Major</option>
+              <option value="master sergeant">Master Sergeant</option>
+              <option value="sergeant">Sergeant</option>
+              <option value="first corporal">First Corporal</option>
+              <option value="chief corporal">Chief Corporal</option>
+              <option value="corporal">Corporal</option>
+            </select>
+          </label>
+          <label>
+            <span>Spezialisierung</span>
+            <select id="member-spec">
+              <option value="all">Alle</option>
+              <option value="medic">Medic</option>
+              <option value="arf">ARF</option>
+              <option value="techniker">Techniker</option>
+            </select>
+          </label>
+          <label>
+            <span>Squad</span>
+            <select id="member-squad">
+              <option value="all">Alle</option>
+              <option value="aurek">Aurek</option>
+              <option value="besh">Besh</option>
+              <option value="cresh">Cresh</option>
+            </select>
+          </label>
+          <label>
+            <span>Status</span>
+            <select id="member-status">
+              <option value="all">Alle</option>
+              <option value="active">Active</option>
+              <option value="deployed">Deployed</option>
+              <option value="reserve">Reserve</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="member-grid" id="member-grid">
+          <article class="member-card" data-name="CT-4401 Rift" data-rank="sergeant major" data-spec="techniker" data-squad="besh" data-status="active">
+            <h3>CT-4401 "Rift"</h3>
+            <p class="member-rank">Sergeant Major</p>
+            <p>Techniker | Squad Besh | Signalzugriff und ECM-Koordination.</p>
+            <p class="member-status state-active">Active</p>
+          </article>
+
+          <article class="member-card" data-name="CT-4178 Pulse" data-rank="master sergeant" data-spec="medic" data-squad="cresh" data-status="deployed">
+            <h3>CT-4178 "Pulse"</h3>
+            <p class="member-rank">Master Sergeant</p>
+            <p>Medic | Squad Cresh | Trauma-Fuehrung und Exfil-Medical Stack.</p>
+            <p class="member-status state-deployed">Deployed</p>
+          </article>
+
+          <article class="member-card" data-name="CT-3892 Vanta" data-rank="sergeant" data-spec="arf" data-squad="aurek" data-status="active">
+            <h3>CT-3892 "Vanta"</h3>
+            <p class="member-rank">Sergeant</p>
+            <p>ARF | Squad Aurek | Voraufklaerung und Zielmarkierung.</p>
+            <p class="member-status state-active">Active</p>
+          </article>
+
+          <article class="member-card" data-name="CT-3712 Halo" data-rank="first corporal" data-spec="medic" data-squad="cresh" data-status="reserve">
+            <h3>CT-3712 "Halo"</h3>
+            <p class="member-rank">First Corporal</p>
+            <p>Medic | Squad Cresh | Field-Stabilisierung und Sicherungsdienst.</p>
+            <p class="member-status state-reserve">Reserve</p>
+          </article>
+
+          <article class="member-card" data-name="CT-3684 Switch" data-rank="chief corporal" data-spec="techniker" data-squad="besh" data-status="active">
+            <h3>CT-3684 "Switch"</h3>
+            <p class="member-rank">Chief Corporal</p>
+            <p>Techniker | Squad Besh | Systembruch und Sensor-Manipulation.</p>
+            <p class="member-status state-active">Active</p>
+          </article>
+
+          <article class="member-card" data-name="CT-3526 Quarry" data-rank="corporal" data-spec="arf" data-squad="aurek" data-status="deployed">
+            <h3>CT-3526 "Quarry"</h3>
+            <p class="member-rank">Corporal</p>
+            <p>ARF | Squad Aurek | Tracking und tiefe Beobachtung.</p>
+            <p class="member-status state-deployed">Deployed</p>
+          </article>
+        </div>
+
+        <p class="member-empty" id="member-empty" hidden>Keine Treffer fuer die aktuelle Filterkombination.</p>
+      </div>
+    </section>
+
+    <section id="statusboard" class="statusboard section-reveal">
+      <div class="container">
+        <p class="eyebrow">Live-Statusboard</p>
+        <h2>Command Dashboard Preview</h2>
+        <p class="lead">Das komplette Live-Board mit Einsatzzaehlern, Readiness und Funkkanal liegt jetzt im ausgelagerten Operations-Hub.</p>
+        <div class="hub-teaser-grid">
+          <article><span>Module</span><strong>Statusboard + Kalender + Medaillen</strong></article>
+          <article><span>Zugriff</span><strong>Operations-Hub</strong></article>
+        </div>
+        <a class="btn btn-primary" href="operations-hub.html">Zum Operations-Hub</a>
+      </div>
+    </section>
+
+    <section id="kalender" class="calendar section-reveal">
+      <div class="container">
+        <p class="eyebrow">Einsatzkalender</p>
+        <h2>Kalender ausgegliedert</h2>
+        <p class="lead">Trainings, Briefings und Einsatzslots sind zentral im Operations-Hub gebuendelt, damit die Hauptseite clean bleibt.</p>
+        <a class="btn btn-ghost" href="operations-hub.html">Kalender oeffnen</a>
+      </div>
+    </section>
+
+    <section id="medaillen" class="medals section-reveal">
+      <div class="container">
+        <p class="eyebrow">Medaillen & Auszeichnungen</p>
+        <h2>Orden im Hub</h2>
+        <p class="lead">Earned/Locked-Progress, Tier-Badges und Kampagnenauszeichnungen findest du im Operations-Hub.</p>
+        <a class="btn btn-ghost" href="operations-hub.html">Auszeichnungen ansehen</a>
+      </div>
+    </section>
+
+    <section id="einsatzakten" class="records section-reveal">
+      <div class="container">
+        <p class="eyebrow">Einsatzakten</p>
+        <h2>Kampagnenarchiv ausgelagert</h2>
+        <p class="lead">Verifizierte Operationen, Resultate und Archivkarten liegen jetzt gesammelt im Operations-Hub.</p>
+        <a class="btn btn-ghost" href="operations-hub.html">Akte aufrufen</a>
+      </div>
+    </section>
+
+    <section id="lore" class="lore section-reveal">
+      <div class="container">
+        <p class="eyebrow">Einheitschronik</p>
+        <h2>Lore-Bereich ausgelagert</h2>
+        <p class="lead">Die komplette Einheitshistorie, Rufnamen und Timeline wurden in den eigenen Lore-Codex verschoben.</p>
+        <a class="btn btn-primary" href="lore-codex.html">Zum Lore-Codex</a>
+      </div>
+    </section>
+
+    <section id="codex" class="codex section-reveal">
+      <div class="container">
+        <p class="eyebrow">Codex</p>
+        <h2>Protokolle im Wissenshub</h2>
+        <p class="lead">Befehlskette, Kommunikationsregeln und Uniformvorgaben sind im separaten Lore-Codex strukturiert hinterlegt.</p>
+        <a class="btn btn-ghost" href="lore-codex.html">Codex oeffnen</a>
+      </div>
+    </section>
+
+    <section id="admin-tools" class="admin-tools section-reveal" aria-label="Admin Hilfe und JSON Validierung">
+      <div class="container">
+        <p class="eyebrow">Admin-Hilfe</p>
+        <h2>Admin-Konsole ausgelagert</h2>
+        <p class="lead">Inline-Editor, JSON-Validierung und Trailer-Mode-Preview laufen jetzt in einer dedizierten Admin-Konsole.</p>
+        <a class="btn btn-primary" href="admin-console.html">Zur Admin-Konsole</a>
+      </div>
+    </section>
+
+    <section id="faehigkeiten" class="capabilities section-reveal">
+      <div class="container">
+        <p class="eyebrow">Faehigkeiten</p>
+        <h2>Was die 36th einzigartig macht</h2>
+        <div class="card-grid">
+          <article class="card">
+            <h3>Silent Recon</h3>
+            <p>Mehrschichtige Aufklaerung mit Fokus auf verwertbare Echtzeitdaten.</p>
+          </article>
+          <article class="card">
+            <h3>Signal Disruption</h3>
+            <p>Gezielte Stoerung gegnerischer Kommunikation und Sensorik.</p>
+          </article>
+          <article class="card">
+            <h3>Sabotage Cells</h3>
+            <p>Kleine Teams neutralisieren Infrastruktur mit minimaler Signatur.</p>
+          </article>
+          <article class="card">
+            <h3>Extraction Corridors</h3>
+            <p>Schnelle Exfiltration uebersichtlicher Korridore unter Druckbedingungen.</p>
+          </article>
+          <article class="card">
+            <h3>Urban Ghosting</h3>
+            <p>Bewegung in dichtem Umfeld ohne erkennbares Bewegungsprofil.</p>
+          </article>
+          <article class="card">
+            <h3>Independent Command</h3>
+            <p>Autonome Fuehrung auf Squad-Ebene mit klarer Entscheidungsdoktrin.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="operationen" class="operations section-reveal">
+      <div class="container">
+        <p class="eyebrow">Operationsmuster</p>
+        <h2>Ablauf hinter der Front</h2>
+        <ol class="timeline">
+          <li>
+            <span>01</span>
+            <div>
+              <h3>Insertion</h3>
+              <p>Verdeckte Annaherung mit minimierter Signatur.</p>
+            </div>
+          </li>
+          <li>
+            <span>02</span>
+            <div>
+              <h3>Data & Mapping</h3>
+              <p>Erfassung von Positionen, Zugriffspunkten und Versorgungsachsen.</p>
+            </div>
+          </li>
+          <li>
+            <span>03</span>
+            <div>
+              <h3>Target Action</h3>
+              <p>Praeziser Eingriff auf kritische Knotenpunkte.</p>
+            </div>
+          </li>
+          <li>
+            <span>04</span>
+            <div>
+              <h3>Clean Exit</h3>
+              <p>Rueckzug ohne Spur, bereit fuer den naechsten Auftrag.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="taktik" class="tactical-map section-reveal">
+      <div class="container">
+        <p class="eyebrow">Republic Tactical Map</p>
+        <h2>Operationsraum der 36th</h2>
+        <div class="map-board" role="img" aria-label="Taktische Operationskarte mit Schluesselsektoren der Einheit">
+          <div class="map-grid"></div>
+
+          <article class="map-node node-alpha">
+            <h3>Sector Aurek</h3>
+            <p>ARF-Voraufklaerung und Sensorplatzierung.</p>
+          </article>
+
+          <article class="map-node node-bravo">
+            <h3>Sector Besh</h3>
+            <p>Techniker stoeren Relay- und Drohnennetze.</p>
+          </article>
+
+          <article class="map-node node-charlie">
+            <h3>Sector Cresh</h3>
+            <p>Medic-Zone fuer Stabilisierung und Extraction.</p>
+          </article>
+
+          <article class="map-node node-command">
+            <h3>Command Link</h3>
+            <p>Kurzes Burst-Window zur Republic Command Chain.</p>
+          </article>
+
+          <span class="map-link link-a" aria-hidden="true"></span>
+          <span class="map-link link-b" aria-hidden="true"></span>
+          <span class="map-link link-c" aria-hidden="true"></span>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="doktrin" class="doctrine section-reveal">
+      <div class="container doctrine-box">
+        <p class="eyebrow">Doktrin</p>
+        <h2>Keine Jedi. Nur Klarheit in der Befehlskette.</h2>
+        <p>
+          Der 36th Storm Corps agiert bewusst ohne Jedi-Unterstuetzung.
+          Unsere Wirksamkeit basiert auf reproduzierbaren Verfahren, messbarer
+          Teamleistung und einem klaren Prinzip: Jede Entscheidung muss auch im
+          hoechsten Druck nachvollziehbar bleiben.
+        </p>
+        <a href="#top" class="btn btn-primary">Zurueck nach oben</a>
+      </div>
+    </section>
+
+    <section class="showcase section-reveal" aria-label="Einheitsvorstellung Abschluss">
+      <div class="container showcase-box">
+        <p class="eyebrow">Einheitsvorstellung</p>
+        <h2>Wir sind die 36th Storm Corps</h2>
+        <p>
+          Eine Republic-Einheit fuer die Einsaetze, die niemand sieht und jeder spaeter versteht.
+          Gefuehrt durch klare Leitungen, getragen von Medic-, ARF-, Technik- und Standard-Infanterie-Modulen,
+          verankert in einem einfachen Prinzip: Die Republik zuerst. Das Team immer.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>36th Storm Corps | Republic Special Operations Unit</p>
+      <p>&copy; <span id="year"></span> Alle Rechte vorbehalten.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

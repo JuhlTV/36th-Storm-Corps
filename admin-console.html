@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin-Konsole | 36th Storm Corps</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Zum Inhalt springen</a>
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="site-header" id="top">
+    <div class="container nav-wrap">
+      <a href="index.html" class="brand" aria-label="Zur Hauptseite">
+        <span class="brand-mark">36</span>
+        <span class="brand-text">STORM CORPS</span>
+      </a>
+      <nav class="main-nav" aria-label="Hub Navigation">
+        <a href="index.html">Hauptseite</a>
+        <a href="operations-hub.html">Operations-Hub</a>
+        <a href="lore-codex.html">Lore-Codex</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content" style="padding-top: 1rem;">
+    <section class="trailer section-reveal" aria-label="Trailer Vorschau">
+      <div class="container">
+        <p class="eyebrow">Trailer Vorschau</p>
+        <h2>Mode Preview Monitor</h2>
+        <div class="trailer-frame" aria-label="Trailer Vorschau im Republic HUD-Stil">
+          <div class="trailer-noise"></div>
+          <div class="trailer-media" id="trailer-media">
+            <iframe
+              id="trailer-youtube"
+              title="36th Storm Corps Trailer"
+              loading="lazy"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+              hidden
+            ></iframe>
+            <video id="trailer-video" controls preload="metadata" playsinline hidden>
+              <source id="trailer-mp4-source" type="video/mp4" />
+              Dein Browser kann dieses Video nicht direkt abspielen.
+            </video>
+            <img id="trailer-poster-fallback" class="trailer-poster" alt="36th Storm Corps Trailer Poster" hidden />
+          </div>
+          <p class="trailer-title" id="trailer-title">TRAILER FEED: STORMCORPS_36TH</p>
+          <p class="trailer-sub" id="trailer-sub">Vorschau wird aus admin-data.json geladen.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-tools section-reveal" aria-label="Admin Hilfe und JSON Validierung">
+      <div class="container">
+        <p class="eyebrow">Admin-Konsole</p>
+        <h1>JSON-Schema & Live-Validierung</h1>
+        <p class="lead">Pflege die Einheit zentral ueber admin-data.json und validiere direkt in der Konsole.</p>
+
+        <div class="admin-grid">
+          <article class="admin-card">
+            <h3>Minimales Schema</h3>
+            <pre id="admin-schema" class="schema-box" aria-live="polite"></pre>
+          </article>
+
+          <article class="admin-card">
+            <h3>Validierungsstatus</h3>
+            <p id="admin-validation-summary" class="validation-summary">Pruefung wird geladen...</p>
+            <ul id="admin-validation-list" class="validation-list"></ul>
+          </article>
+
+          <article class="admin-card admin-editor-card">
+            <h3>Inline-Editor</h3>
+            <p class="admin-note">Direktbearbeitung fuer admin-data.json (nur Browser-Session). Mit Download kannst du die Datei lokal ersetzen.</p>
+            <div class="admin-actions" role="group" aria-label="Editor Aktionen">
+              <button type="button" class="btn btn-ghost" id="admin-validate-btn">Nur validieren</button>
+              <button type="button" class="btn btn-primary" id="admin-apply-btn">Vorschau anwenden</button>
+              <button type="button" class="btn btn-ghost" id="admin-download-btn">JSON herunterladen</button>
+            </div>
+            <label class="admin-editor-label" for="admin-json-editor">admin-data.json</label>
+            <textarea id="admin-json-editor" class="admin-json-editor" spellcheck="false"></textarea>
+          </article>
+
+          <article class="admin-card">
+            <h3>Trailer-Mode Vorschau</h3>
+            <p class="admin-note">Schaltet den Trailer live um, ohne JSON zu speichern.</p>
+            <div class="admin-actions" role="group" aria-label="Trailer Vorschau Modi">
+              <button type="button" class="btn btn-ghost trailer-mode-btn" data-mode="youtube-first">youtube-first</button>
+              <button type="button" class="btn btn-ghost trailer-mode-btn" data-mode="mp4-first">mp4-first</button>
+              <button type="button" class="btn btn-ghost trailer-mode-btn" data-mode="poster-only">poster-only</button>
+            </div>
+            <p class="admin-note" id="admin-mode-active">Aktiver Vorschau-Modus: aus JSON</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+{
+  "ui": {
+    "defaultTheme": "tactical",
+    "commandAlerts": [
+      {
+        "level": "info",
+        "icon": "operations",
+        "message": "Server Mirror aktiv: Neutraler Clone-Wars-Start ab Geonosis.",
+        "linkLabel": "Operations-Hub",
+        "linkUrl": "operations-hub.html"
+      },
+      {
+        "level": "warn",
+        "icon": "admin",
+        "message": "Admin-Hinweis: Neue Einsatztermine bitte mit ISO-Datum pflegen.",
+        "linkLabel": "Admin-Konsole",
+        "linkUrl": "admin-console.html"
+      }
+    ]
+  },
+  "trailer": {
+    "mode": "youtube-first",
+    "title": "TRAILER FEED: STORMCORPS_36TH",
+    "subtitle": "Republic combat preview. Falls YouTube nicht gesetzt ist, wird MP4 verwendet; falls MP4 fehlt, erscheint das Poster.",
+    "youtubeUrl": "https://www.youtube.com/watch?v=Xf1cfemeX_U",
+    "mp4Url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    "posterUrl": "https://images.unsplash.com/photo-1518331647614-3004c5fbecc3?auto=format&fit=crop&w=1400&q=80"
+  },
+  "statusboard": {
+    "readiness": "Aurek-1",
+    "channel": "COM-NET 36.7"
+  },
+  "members": [
+    {
+      "id": "CC-2425",
+      "callsign": "Texer",
+      "rank": "Senior Commander",
+      "specialization": "Command",
+      "squad": "High Command",
+      "status": "Active",
+      "description": "Fuehrt die Corps-Doktrin, Freigaben und operative Endentscheidung im Feldraum."
+    },
+    {
+      "id": "CC-2426",
+      "callsign": "Master",
+      "rank": "Commander",
+      "specialization": "Command",
+      "squad": "High Command",
+      "status": "Active",
+      "description": "Leitet Einsatzrotationen, Ressourcensteuerung und sektorweite Befehlsweitergabe."
+    },
+    {
+      "id": "CT-9999",
+      "callsign": "Pray",
+      "rank": "Sergeant Major",
+      "specialization": "Operations",
+      "squad": "Command Staff",
+      "status": "Active",
+      "description": "Uebersetzt Corps-Ziele in taktische Einsatzpakete fuer Aufklaerung und Zugriff."
+    },
+    {
+      "id": "CT-3644",
+      "callsign": "Slate",
+      "rank": "Captain",
+      "specialization": "Recon Command",
+      "squad": "Command Staff",
+      "status": "Deployed",
+      "description": "Fuehrt vordere Teamachsen, Zielbildpflege und stille Einsatzkoordination."
+    },
+    {
+      "id": "CT-4401",
+      "callsign": "Rift",
+      "rank": "Sergeant Major",
+      "specialization": "Techniker",
+      "squad": "Besh",
+      "status": "Active",
+      "description": "Signalzugriff und ECM-Koordination."
+    },
+    {
+      "id": "CT-4178",
+      "callsign": "Pulse",
+      "rank": "Master Sergeant",
+      "specialization": "Medic",
+      "squad": "Cresh",
+      "status": "Deployed",
+      "description": "Trauma-Fuehrung und Exfil-Medical Stack."
+    }
+  ],
+  "operations": [
+    {
+      "title": "Operation Geonosis",
+      "description": "Erster Einsatzrahmen der Einheit im Clone-Wars-Feld.",
+      "datetime": "2026-05-24T20:00:00",
+      "capacity": 10,
+      "participants": 7
+    },
+    {
+      "title": "Operation Frontline Drill",
+      "description": "Praezisionsuebung fuer Aufklaerung und Teambewegung.",
+      "datetime": "2026-05-27T19:30:00",
+      "capacity": 8,
+      "participants": 8
+    },
+    {
+      "title": "Operation Republic Relay",
+      "description": "Funkdisziplin und Reaktionswege unter simuliertem Druck.",
+      "datetime": "2026-05-30T21:00:00",
+      "capacity": 5,
+      "participants": 5
+    },
+    {
+      "title": "Operation Logistics Chain",
+      "description": "Versorgung, Koordination und Einsatzplanung im Hintergrund.",
+      "datetime": "2026-06-02T20:15:00",
+      "capacity": 12,
+      "participants": 4
+    }
+  ],
+  "medals": [
+    {
+      "title": "Recon Star",
+      "tier": "elite",
+      "icon": "R",
+      "earned": true,
+      "progress": 100,
+      "goal": 100,
+      "unlockedAt": "2026-05-16",
+      "description": "Fuer aussergewoehnliche Aufklaerungsleistung unter Feinddruck."
+    },
+    {
+      "title": "Medic Crest",
+      "tier": "elite",
+      "icon": "M",
+      "earned": false,
+      "progress": 68,
+      "goal": 100,
+      "unlockedAt": "pending",
+      "description": "Fuer Lebensrettung und Teamstabilisierung unter Feuer."
+    },
+    {
+      "title": "Tech Sigil",
+      "tier": "standard",
+      "icon": "T",
+      "earned": false,
+      "progress": 42,
+      "goal": 100,
+      "unlockedAt": "pending",
+      "description": "Fuer erfolgreiche Systemstoerung oder kritische Feldreparatur."
+    },
+    {
+      "title": "Command Laurel",
+      "tier": "legendary",
+      "icon": "C",
+      "earned": true,
+      "progress": 100,
+      "goal": 100,
+      "unlockedAt": "2026-04-28",
+      "description": "Fuer Fuehrung mit null Ausfallquote in mehrstufigen Einsaetzen."
+    },
+    {
+      "title": "Long Service Mark",
+      "tier": "standard",
+      "icon": "L",
+      "earned": false,
+      "progress": 79,
+      "goal": 100,
+      "unlockedAt": "pending",
+      "description": "Fuer Langzeitdienst und bewaehrte Einsatzkontinuitaet."
+    }
+  ]
+}
