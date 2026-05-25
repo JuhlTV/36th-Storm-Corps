@@ -2052,22 +2052,28 @@ summary:focus-visible {
   font-size: 0.75rem;
 }
 .nco-rank .rank-insignia.enlisted span {
-  border-right-color: rgba(208, 216, 226, 0.92);
-  border-bottom-color: rgba(208, 216, 226, 0.92);
-  box-shadow: 0 0 0 1px rgba(95, 108, 124, 0.32);
+  border-right-color: rgba(224, 230, 238, 0.96);
+  border-bottom-color: rgba(224, 230, 238, 0.96);
+  box-shadow:
+    0 0 0 1px rgba(84, 97, 114, 0.48),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.22);
 }
 .nco-rank .rank-insignia.enlisted i {
-  border-color: rgba(184, 194, 206, 0.82);
-  background: rgba(146, 157, 173, 0.62);
+  border-color: rgba(205, 214, 224, 0.9);
+  background:
+    radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.7), rgba(164, 176, 194, 0.74) 58%, rgba(92, 106, 124, 0.88));
 }
 .enlisted-rank .rank-insignia.enlisted span {
-  border-right-color: rgba(236, 180, 176, 0.92);
-  border-bottom-color: rgba(236, 180, 176, 0.92);
-  box-shadow: 0 0 0 1px rgba(118, 64, 61, 0.4);
+  border-right-color: rgba(245, 194, 188, 0.96);
+  border-bottom-color: rgba(245, 194, 188, 0.96);
+  box-shadow:
+    0 0 0 1px rgba(114, 58, 54, 0.5),
+    inset 1px 1px 0 rgba(255, 230, 226, 0.18);
 }
 .enlisted-rank .rank-insignia.enlisted i {
-  border-color: rgba(245, 185, 179, 0.86);
-  background: rgba(167, 95, 89, 0.62);
+  border-color: rgba(246, 196, 189, 0.94);
+  background:
+    radial-gradient(circle at 30% 28%, rgba(255, 231, 225, 0.66), rgba(192, 111, 104, 0.78) 58%, rgba(122, 58, 53, 0.9));
 }
 
 .lead-card h3,
@@ -2127,24 +2133,44 @@ summary:focus-visible {
   gap: 0.3rem;
   padding: 0.24rem 0.42rem;
   border-radius: 0.2rem;
-  border: 1px solid rgba(184, 205, 229, 0.5);
+  border: 1px solid rgba(194, 213, 236, 0.56);
   background:
-    linear-gradient(180deg, rgba(236, 243, 255, 0.2), rgba(62, 74, 95, 0.32)),
-    rgba(9, 14, 21, 0.7);
+    linear-gradient(165deg, rgba(255, 255, 255, 0.26), rgba(166, 182, 203, 0.14) 44%, rgba(38, 49, 65, 0.62) 92%),
+    linear-gradient(180deg, rgba(10, 16, 24, 0.92), rgba(7, 11, 17, 0.98));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 0 0 1px rgba(81, 112, 151, 0.3);
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.56),
+    0 0 0 1px rgba(83, 111, 147, 0.34),
+    0 6px 10px rgba(0, 0, 0, 0.26);
+  position: relative;
+  overflow: hidden;
+}
+
+.rank-insignia.officer::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: 0.16rem;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(120deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 48%);
+  mix-blend-mode: screen;
+  opacity: 0.44;
 }
 
 .rank-insignia.officer span {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  border: 1px solid rgba(228, 237, 249, 0.8);
-  background: radial-gradient(circle at 28% 28%, #ffffff, #c7d2e4 68%);
+  border: 1px solid rgba(232, 239, 249, 0.88);
+  background:
+    radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.9), rgba(220, 228, 240, 0.92) 48%, rgba(148, 162, 180, 0.95) 76%, rgba(86, 98, 116, 0.98));
   box-shadow:
-    0 0 0 1px rgba(90, 106, 127, 0.35),
-    0 0 7px rgba(158, 195, 245, 0.36);
+    0 0 0 1px rgba(88, 103, 124, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    inset -1px -1px 0 rgba(38, 46, 58, 0.46),
+    0 0 5px rgba(158, 195, 245, 0.22);
 }
 
 .pips-1 span:nth-child(n + 2),
@@ -2163,29 +2189,51 @@ summary:focus-visible {
   gap: 0.32rem 0.24rem;
   padding: 0.24rem 0.4rem;
   border-radius: 0.2rem;
-  border: 1px solid rgba(182, 199, 218, 0.4);
+  border: 1px solid rgba(188, 205, 224, 0.48);
   background:
-    linear-gradient(180deg, rgba(232, 240, 252, 0.08), rgba(8, 12, 18, 0.2)),
-    rgba(8, 12, 18, 0.62);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    linear-gradient(162deg, rgba(255, 255, 255, 0.24), rgba(162, 176, 194, 0.1) 46%, rgba(24, 34, 46, 0.7) 92%),
+    linear-gradient(180deg, rgba(8, 12, 18, 0.94), rgba(6, 10, 16, 0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.58),
+    0 6px 10px rgba(0, 0, 0, 0.24);
+  position: relative;
+  overflow: hidden;
+}
+
+.rank-insignia.enlisted::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  pointer-events: none;
+  border-radius: 0.16rem;
+  background:
+    repeating-linear-gradient(130deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent 54%);
+  opacity: 0.42;
 }
 
 .rank-insignia.enlisted span {
   width: 12px;
   height: 12px;
-  border-right: 2px solid rgba(216, 226, 238, 0.82);
-  border-bottom: 2px solid rgba(216, 226, 238, 0.82);
+  border-right: 2px solid rgba(219, 228, 238, 0.94);
+  border-bottom: 2px solid rgba(219, 228, 238, 0.94);
   transform: rotate(45deg);
-  box-shadow: 0 0 0 1px rgba(79, 95, 117, 0.25);
+  box-shadow:
+    0 0 0 1px rgba(77, 92, 113, 0.44),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .rank-insignia.enlisted i {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  border: 1px solid rgba(181, 190, 203, 0.72);
-  background: rgba(134, 145, 161, 0.55);
-  box-shadow: none;
+  border: 1px solid rgba(197, 207, 220, 0.88);
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.66), rgba(156, 169, 186, 0.78) 56%, rgba(88, 102, 121, 0.9));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 0 0 1px rgba(65, 79, 98, 0.42);
   justify-self: center;
   align-self: center;
   font-style: normal;
