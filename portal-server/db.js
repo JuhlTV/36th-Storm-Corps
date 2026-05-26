@@ -101,6 +101,11 @@ const findUserByGoogleSub = (googleSub) => {
   return db.prepare('SELECT * FROM users WHERE google_sub = ?').get(googleSub);
 };
 
+const findUserById = (userId) => {
+  const db = getDatabase();
+  return db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+};
+
 const findUserByEmail = (email) => {
   if (!email) {
     return null;
@@ -136,9 +141,10 @@ const countUsers = () => {
 
 const createLocalUser = ({ username, email = null, passwordHash, displayName, ipAddress, defaultRole = 'member' }) => {
   const db = getDatabase();
-  const normalizedUsername = String(username || '').trim().toLowerCase();
+  const normalizedUsername = username ? String(username).trim().toLowerCase() : null;
   const normalizedEmail = email ? String(email).trim().toLowerCase() : null;
   const timestamp = nowIso();
+  const localSub = normalizedUsername ? `local:${normalizedUsername}` : `local:${timestamp}:${Math.random().toString(36).slice(2, 10)}`;
 
   const result = db.prepare(`
     INSERT INTO users (
@@ -146,10 +152,10 @@ const createLocalUser = ({ username, email = null, passwordHash, displayName, ip
       display_name, avatar_url, role, first_ip, last_ip, created_at, updated_at, last_login_at
     ) VALUES (?, ?, ?, 'local', ?, ?, NULL, ?, ?, ?, ?, ?, ?)
   `).run(
-    `local:${normalizedUsername}`,
+    localSub,
     normalizedUsername,
     normalizedEmail,
-    passwordHash,
+    passwordHash || null,
     displayName,
     normalizeRole(defaultRole),
     ipAddress,
@@ -229,6 +235,23 @@ const touchUserLogin = ({ userId, ipAddress }) => {
   `).run(ipAddress, timestamp, timestamp, userId);
 
   return db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+};
+
+const clearLocalCredentials = ({ userId }) => {
+  const db = getDatabase();
+  const timestamp = nowIso();
+  db.prepare(`
+    UPDATE users
+    SET username = NULL, email = NULL, password_hash = NULL, updated_at = ?
+    WHERE id = ? AND auth_provider = 'local'
+  `).run(timestamp, userId);
+
+  return db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+};
+
+const deleteUserById = ({ userId }) => {
+  const db = getDatabase();
+  db.prepare('DELETE FROM users WHERE id = ?').run(userId);
 };
 
 const setUserRole = ({ userId, role }) => {
@@ -328,6 +351,9 @@ module.exports = {
   getDatabase,
   countUsers,
   createLocalUser,
+  clearLocalCredentials,
+  deleteUserById,
+  findUserById,
   findUserByLogin,
   findUserByUsername,
   upsertUserFromGoogle,

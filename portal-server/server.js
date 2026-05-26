@@ -8,9 +8,17 @@ const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const { Strategy: GoogleStrategy } = require('passport-google-oauth20');
 const {
+  createAccount,
+  findAccountByLogin,
+  touchAccountLogin,
+} = require('./encrypted-auth-store');
+const {
   initDb,
+  clearLocalCredentials,
   countUsers,
   createLocalUser,
+  deleteUserById,
+  findUserById,
   findUserByLogin,
   upsertUserFromGoogle,
   listUsers,
@@ -232,11 +240,11 @@ app.post('/auth/register', async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid email address' });
     }
 
-    if (findUserByLogin(username)) {
+    if (findAccountByLogin(username)) {
       return res.status(409).json({ error: 'Username already exists' });
     }
 
-    if (email && findUserByLogin(email)) {
+    if (email && findAccountByLogin(email)) {
       return res.status(409).json({ error: 'Email already exists' });
     }
 
@@ -251,11 +259,23 @@ app.post('/auth/register', async (req, res, next) => {
     const user = createLocalUser({
       username,
       email: email || null,
-      passwordHash,
+      passwordHash: passwordHash,
       displayName: displayName || username,
       ipAddress,
       defaultRole: role,
     });
+
+    try {
+      createAccount({
+        userId: user.id,
+        username,
+        email: email || null,
+        passwordHash,
+      });
+    } catch (storeError) {
+      deleteUserById({ userId: user.id });
+      throw storeError;
+    }
 
     req.logIn(user, (loginError) => {
       if (loginError) {
@@ -265,7 +285,7 @@ app.post('/auth/register', async (req, res, next) => {
       recordAuditEvent({
         actorUserId: user.id,
         eventType: 'register',
-        payload: { provider: 'local', username, ipAddress },
+        payload: { provider: 'local', ipAddress },
       });
 
       return res.status(201).json({ user });
@@ -291,17 +311,41 @@ app.post('/auth/login', async (req, res, next) => {
       return res.status(400).json({ error: 'Login and password are required' });
     }
 
-    const user = findUserByLogin(login);
-    if (!user || !user.password_hash) {
+    let authAccount = findAccountByLogin(login);
+
+    if (!authAccount) {
+      const legacyUser = findUserByLogin(login);
+      if (legacyUser && legacyUser.password_hash && legacyUser.auth_provider === 'local') {
+        const legacyPasswordValid = await bcrypt.compare(password, legacyUser.password_hash);
+        if (legacyPasswordValid) {
+          authAccount = createAccount({
+            userId: legacyUser.id,
+            username: legacyUser.username,
+            email: legacyUser.email,
+            passwordHash: legacyUser.password_hash,
+          });
+
+          clearLocalCredentials({ userId: legacyUser.id });
+        }
+      }
+    }
+
+    if (!authAccount || !authAccount.passwordHash) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const passwordValid = await bcrypt.compare(password, user.password_hash);
+    const passwordValid = await bcrypt.compare(password, authAccount.passwordHash);
     if (!passwordValid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const updatedUser = touchUserLogin({ userId: user.id, ipAddress });
+    touchAccountLogin({ accountId: authAccount.id });
+    const dbUser = findUserById(authAccount.userId);
+    if (!dbUser) {
+      return res.status(401).json({ error: 'Account not found' });
+    }
+
+    const updatedUser = touchUserLogin({ userId: dbUser.id, ipAddress });
     req.logIn(updatedUser, (loginError) => {
       if (loginError) {
         return next(loginError);

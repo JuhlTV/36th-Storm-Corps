@@ -3984,6 +3984,11 @@ body.page-privacy {
   transform: none;
 }
 
+.page-forum .section-reveal {
+  opacity: 1;
+  transform: none;
+}
+
 .privacy-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4477,6 +4482,249 @@ html {
 
   .lore-intel-row {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Badass design pass: sharp silhouettes, stronger contrast, tactical glow accents. */
+:root {
+  --edge-cut: 14px;
+  --edge-cut-sm: 10px;
+  --hot: #ff7657;
+  --hot-glow: rgba(255, 118, 87, 0.28);
+}
+
+body {
+  background:
+    radial-gradient(circle at 8% 16%, rgba(255, 118, 87, 0.08), transparent 36%),
+    radial-gradient(circle at 88% 10%, rgba(31, 183, 185, 0.12), transparent 40%),
+    radial-gradient(circle at 50% 82%, rgba(106, 169, 255, 0.08), transparent 42%),
+    var(--bg-layer-3);
+}
+
+main::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    linear-gradient(130deg, transparent 0 32%, rgba(255, 118, 87, 0.08) 42%, transparent 58%),
+    linear-gradient(48deg, transparent 0 24%, rgba(31, 183, 185, 0.08) 34%, transparent 48%);
+  mix-blend-mode: screen;
+  opacity: 0.6;
+}
+
+.site-header {
+  border-bottom: 1px solid rgba(255, 118, 87, 0.28);
+  background:
+    linear-gradient(112deg, rgba(255, 118, 87, 0.1), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 26%),
+    rgba(1, 3, 5, 0.92);
+}
+
+.site-header::after {
+  background: radial-gradient(140% 14px at 50% 0, rgba(255, 118, 87, 0.28), rgba(255, 118, 87, 0));
+}
+
+.brand-mark {
+  clip-path: polygon(14% 0, 100% 0, 100% 86%, 86% 100%, 0 100%, 0 14%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -10px 18px rgba(10, 24, 46, 0.24),
+    0 0 0 1px rgba(255, 118, 87, 0.3),
+    0 0 16px rgba(255, 118, 87, 0.14);
+}
+
+.main-nav > a,
+.main-nav > .nav-dropdown > .dropdown-toggle {
+  border: 1px solid transparent;
+}
+
+.main-nav > a:hover,
+.main-nav > .nav-dropdown > .dropdown-toggle:hover,
+.main-nav > a.is-active {
+  border-color: rgba(255, 118, 87, 0.32);
+  text-shadow: 0 0 14px rgba(255, 118, 87, 0.24);
+}
+
+.hero {
+  overflow: clip;
+}
+
+.hero::before {
+  background:
+    radial-gradient(circle at 18% 14%, rgba(255, 118, 87, 0.2), transparent 28%),
+    radial-gradient(circle at 84% 24%, rgba(31, 183, 185, 0.18), transparent 30%),
+    radial-gradient(circle at 50% 52%, rgba(255, 255, 255, 0.06), transparent 26%),
+    radial-gradient(circle at 48% 78%, rgba(76, 210, 212, 0.1), transparent 38%);
+}
+
+.hero-copy {
+  border: 1px solid rgba(255, 118, 87, 0.24);
+  box-shadow:
+    0 26px 58px rgba(0, 0, 0, 0.56),
+    0 0 0 1px rgba(255, 118, 87, 0.1),
+    0 0 26px rgba(255, 118, 87, 0.14);
+}
+
+.hero h1 {
+  text-shadow:
+    0 0 22px rgba(255, 118, 87, 0.2),
+    0 0 44px rgba(31, 183, 185, 0.1);
+}
+
+.hero-panel,
+.card,
+.rank-card,
+.member-card,
+.record-card,
+.lead-card,
+.squad-card,
+.forum-panel,
+.admin-card,
+.timeline li,
+.map-node,
+.privacy-card {
+  border-color: rgba(255, 118, 87, 0.18);
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.44),
+    0 0 0 1px rgba(255, 118, 87, 0.08),
+    0 0 16px rgba(255, 118, 87, 0.08);
+}
+
+@supports (clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%)) {
+  .hero-panel,
+  .card,
+  .rank-card,
+  .member-card,
+  .record-card,
+  .lead-card,
+  .squad-card,
+  .forum-panel,
+  .admin-card,
+  .timeline li,
+  .map-node,
+  .privacy-card {
+    clip-path: polygon(var(--edge-cut) 0, 100% 0, 100% calc(100% - var(--edge-cut)), calc(100% - var(--edge-cut)) 100%, 0 100%, 0 var(--edge-cut));
+  }
+}
+
+.card::before,
+.rank-card::before,
+.timeline li::before,
+.forum-thread-card::before {
+  background:
+    linear-gradient(110deg, rgba(255, 118, 87, 0.18), transparent 48%),
+    linear-gradient(245deg, rgba(31, 183, 185, 0.12), transparent 52%);
+}
+
+.btn {
+  position: relative;
+  border-color: rgba(255, 118, 87, 0.34);
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(255, 118, 87, 0.18),
+    0 0 18px rgba(255, 118, 87, 0.12);
+}
+
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, rgba(255, 118, 87, 0.2), transparent 42%);
+  opacity: 0;
+  transition: opacity var(--motion-mid) var(--ease-standard);
+  pointer-events: none;
+}
+
+.btn:hover::before {
+  opacity: 1;
+}
+
+.btn-primary {
+  background:
+    linear-gradient(135deg, rgba(255, 118, 87, 0.95), rgba(255, 118, 87, 0.72) 42%, rgba(31, 183, 185, 0.86)),
+    rgba(12, 18, 26, 0.92);
+  color: #fff6f3;
+}
+
+.btn-ghost {
+  border-color: rgba(255, 118, 87, 0.38);
+  background:
+    linear-gradient(145deg, rgba(255, 118, 87, 0.14), rgba(31, 183, 185, 0.08) 56%),
+    rgba(4, 10, 15, 0.88);
+}
+
+.btn-primary:hover,
+.btn-ghost:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow:
+    0 16px 30px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 118, 87, 0.24),
+    0 0 24px rgba(255, 118, 87, 0.18);
+}
+
+.timeline span {
+  background:
+    linear-gradient(145deg, rgba(255, 118, 87, 0.98), rgba(31, 183, 185, 0.74)),
+    rgba(6, 12, 18, 0.94);
+  box-shadow: 0 0 0 1px rgba(255, 118, 87, 0.24), 0 0 16px rgba(255, 118, 87, 0.24);
+}
+
+.site-footer {
+  border-top-color: rgba(255, 118, 87, 0.26);
+  background:
+    linear-gradient(180deg, rgba(255, 118, 87, 0.06), transparent 30%),
+    rgba(3, 5, 8, 0.94);
+}
+
+.site-footer a:hover {
+  color: #ffd1c7;
+  text-shadow: 0 0 10px rgba(255, 118, 87, 0.2);
+}
+
+@keyframes tactical-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px rgba(255, 118, 87, 0.14), 0 0 18px rgba(255, 118, 87, 0.12);
+  }
+
+  50% {
+    box-shadow: 0 0 0 1px rgba(255, 118, 87, 0.24), 0 0 30px rgba(255, 118, 87, 0.24);
+  }
+}
+
+.forum-status-grid article,
+.statusboard-grid article {
+  animation: tactical-pulse 4.8s ease-in-out infinite;
+}
+
+@media (max-width: 980px) {
+  :root {
+    --edge-cut: 10px;
+  }
+
+  .hero-copy,
+  .hero-panel,
+  .card,
+  .rank-card,
+  .member-card,
+  .record-card,
+  .lead-card,
+  .squad-card,
+  .forum-panel,
+  .admin-card,
+  .timeline li,
+  .map-node,
+  .privacy-card {
+    clip-path: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .forum-status-grid article,
+  .statusboard-grid article {
+    animation: none;
   }
 }
 

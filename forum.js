@@ -28,6 +28,7 @@ const forumRegisterDisplay = document.getElementById('forum-register-display');
 const forumRegisterEmail = document.getElementById('forum-register-email');
 const forumRegisterPassword = document.getElementById('forum-register-password');
 const forumRegisterNote = document.getElementById('forum-register-note');
+const forumRevealSections = document.querySelectorAll('.section-reveal');
 
 let selectedThreadId = null;
 let currentUser = null;
@@ -40,6 +41,13 @@ const escapeHtml = (value) => String(value)
   .replaceAll('>', '&gt;')
   .replaceAll('"', '&quot;')
   .replaceAll("'", '&#39;');
+
+const revealForumSections = () => {
+  forumRevealSections.forEach((section, index) => {
+    section.style.transitionDelay = `${Math.min(index * 70, 280)}ms`;
+    section.classList.add('visible');
+  });
+};
 
 const apiFetch = async (url, options = {}) => {
   const response = await fetch(url, {
@@ -338,6 +346,7 @@ forumRegisterForm?.addEventListener('submit', async (event) => {
 
 (async () => {
   try {
+    revealForumSections();
     await renderAuthState();
     if (currentUser && ['owner', 'admin'].includes(currentUser.role)) {
       await loadAdminUsers();
