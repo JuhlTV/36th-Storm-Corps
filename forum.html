@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forum | 36th Storm Corps</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="page-forum">
+  <a class="skip-link" href="#main-content">Zum Inhalt springen</a>
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="site-header" id="top">
+    <div class="container nav-wrap">
+      <a href="index.html" class="brand" aria-label="Zur Hauptseite">
+        <span class="brand-mark">36</span>
+        <span class="brand-text">STORM CORPS</span>
+      </a>
+      <nav class="main-nav" aria-label="Forum Navigation">
+        <a href="index.html">Hauptseite</a>
+        <a href="operations-hub.html">Operations-Hub</a>
+        <a href="lore-codex.html">Lore-Codex</a>
+        <a href="admin-console.html">Admin-Konsole</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="forum-hero section-reveal">
+      <div class="container">
+        <p class="eyebrow">Portal-Netzwerk</p>
+        <h1>Forum</h1>
+        <p class="lead">Threads, Antworten, Rechte und Moderation laufen ueber das neue Backend. Anmeldung erfolgt per Google Account.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="/auth/google" id="forum-login-link">Mit Google anmelden</a>
+          <button class="btn btn-ghost" type="button" id="forum-refresh-btn">Threads aktualisieren</button>
+          <button class="btn btn-ghost" type="button" id="forum-logout-btn">Abmelden</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="forum-status section-reveal">
+      <div class="container statusboard-grid forum-status-grid">
+        <article><span>Status</span><strong id="forum-auth-state">Lade...</strong></article>
+        <article><span>Rolle</span><strong id="forum-role-state">-</strong></article>
+        <article><span>Owner-Lock</span><strong id="forum-owner-state">-</strong></article>
+        <article><span>Threads</span><strong id="forum-thread-count">0</strong></article>
+      </div>
+    </section>
+
+    <section class="forum-board section-reveal">
+      <div class="container forum-grid">
+        <article class="forum-panel forum-list-panel">
+          <h2>Threads</h2>
+          <div id="forum-thread-list" class="forum-thread-list"></div>
+        </article>
+
+        <article class="forum-panel forum-detail-panel">
+          <h2>Thread-Ansicht</h2>
+          <div id="forum-thread-detail" class="forum-thread-detail">
+            <p class="forum-empty">Waehle einen Thread aus oder erzeuge einen neuen.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="forum-board section-reveal">
+      <div class="container forum-grid">
+        <article class="forum-panel">
+          <h2>Neuen Thread erstellen</h2>
+          <form id="forum-thread-form" class="forum-form">
+            <label>
+              <span>Titel</span>
+              <input id="forum-thread-title" type="text" maxlength="120" placeholder="z. B. Einsatzplanung fuer morgen" />
+            </label>
+            <label>
+              <span>Inhalt</span>
+              <textarea id="forum-thread-body" rows="7" maxlength="2000" placeholder="Beschreibe den Thread..." ></textarea>
+            </label>
+            <button class="btn btn-primary" type="submit">Thread posten</button>
+            <p class="forum-note" id="forum-thread-form-note">Zum Posten musst du eingeloggt sein.</p>
+          </form>
+        </article>
+
+        <article class="forum-panel">
+          <h2>Antwort schreiben</h2>
+          <form id="forum-reply-form" class="forum-form">
+            <label>
+              <span>Aktueller Thread</span>
+              <input id="forum-reply-thread" type="text" readonly value="Kein Thread gewaehlt" />
+            </label>
+            <label>
+              <span>Antwort</span>
+              <textarea id="forum-reply-body" rows="7" maxlength="2000" placeholder="Antwort auf den gewaehlten Thread..." ></textarea>
+            </label>
+            <button class="btn btn-primary" type="submit">Antwort posten</button>
+            <p class="forum-note" id="forum-reply-form-note">Antworten sind nur fuer eingeloggte Nutzer aktiv.</p>
+          </form>
+        </article>
+      </div>
+    </section>
+
+    <section class="forum-board section-reveal" id="forum-admin-section" hidden>
+      <div class="container forum-grid forum-admin-grid">
+        <article class="forum-panel forum-admin-panel">
+          <h2>Rollenverwaltung</h2>
+          <p class="forum-note">Nur Owner, Admins und Moderatoren mit Freigabe sehen diesen Bereich.</p>
+          <div id="forum-user-list" class="forum-user-list"></div>
+        </article>
+
+        <article class="forum-panel forum-admin-panel">
+          <h2>Rollenstatus</h2>
+          <p class="forum-note" id="forum-admin-note">Lade...</p>
+          <div class="forum-admin-actions">
+            <button class="btn btn-ghost" type="button" id="forum-admin-refresh">Nutzer aktualisieren</button>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>36th Storm Corps | Republic Special Operations Unit</p>
+      <p><a href="index.html">Startseite</a> | <a href="privacy.html">Datenschutzerklärung</a> | <a href="impressum.html">Impressum</a> | <a href="admin-console.html">Admin-Konsole</a></p>
+    </div>
+  </footer>
+
+  <script src="forum.js"></script>
+</body>
+</html>

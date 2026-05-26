@@ -12,7 +12,7 @@
   />
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body class="page-admin page-portal-admin">
   <a class="skip-link" href="#main-content">Zum Inhalt springen</a>
   <div class="noise" aria-hidden="true"></div>
 
@@ -26,6 +26,7 @@
         <a href="index.html">Hauptseite</a>
         <a href="operations-hub.html">Operations-Hub</a>
         <a href="lore-codex.html">Lore-Codex</a>
+        <a href="forum.html">Forum</a>
       </nav>
     </div>
   </header>
@@ -99,10 +100,27 @@
             </div>
             <p class="admin-note" id="admin-mode-active">Aktiver Vorschau-Modus: aus JSON</p>
           </article>
+
+          <article class="admin-card">
+            <h3>Portal-Zugang</h3>
+            <p class="admin-note">Google-Login, Rollen und Forum laufen nach dem Backend-Start ueber diese Adresse.</p>
+            <div class="admin-actions">
+              <a class="btn btn-primary" href="/auth/google">Mit Google anmelden</a>
+              <a class="btn btn-ghost" href="forum.html">Zum Forum</a>
+            </div>
+            <p class="admin-note">Owner kann optional ueber `OWNER_EMAIL`, `OWNER_GOOGLE_SUB` und `OWNER_IP_LOCK` konfiguriert werden.</p>
+          </article>
         </div>
       </div>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>36th Storm Corps | Republic Special Operations Unit</p>
+      <p><a href="index.html">Startseite</a> | <a href="privacy.html">Datenschutzerklärung</a> | <a href="impressum.html">Impressum</a> | <a href="forum.html">Forum</a></p>
+    </div>
+  </footer>
 
   <script src="script.js"></script>
 </body>
