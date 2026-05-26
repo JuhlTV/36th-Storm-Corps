@@ -24,7 +24,10 @@ const initDb = () => {
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       google_sub TEXT UNIQUE NOT NULL,
+      username TEXT,
       email TEXT UNIQUE,
+      auth_provider TEXT NOT NULL DEFAULT 'google',
+      password_hash TEXT,
       display_name TEXT NOT NULL,
       avatar_url TEXT,
       role TEXT NOT NULL DEFAULT 'member',
@@ -66,6 +69,23 @@ const initDb = () => {
     );
   `);
 
+  const userColumns = db.prepare('PRAGMA table_info(users)').all().map((entry) => entry.name);
+
+  if (!userColumns.includes('username')) {
+    db.exec('ALTER TABLE users ADD COLUMN username TEXT');
+  }
+
+  if (!userColumns.includes('auth_provider')) {
+    db.exec("ALTER TABLE users ADD COLUMN auth_provider TEXT NOT NULL DEFAULT 'google'");
+  }
+
+  if (!userColumns.includes('password_hash')) {
+    db.exec('ALTER TABLE users ADD COLUMN password_hash TEXT');
+  }
+
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_unique ON users(username) WHERE username IS NOT NULL');
+  db.exec("UPDATE users SET auth_provider = COALESCE(auth_provider, 'google')");
+
   return db;
 };
 
@@ -90,6 +110,58 @@ const findUserByEmail = (email) => {
   return db.prepare('SELECT * FROM users WHERE email = ?').get(email);
 };
 
+const findUserByUsername = (username) => {
+  if (!username) {
+    return null;
+  }
+
+  const db = getDatabase();
+  return db.prepare('SELECT * FROM users WHERE username = ?').get(String(username).trim().toLowerCase());
+};
+
+const findUserByLogin = (login) => {
+  const normalized = String(login || '').trim().toLowerCase();
+  if (!normalized) {
+    return null;
+  }
+
+  return findUserByUsername(normalized) || findUserByEmail(normalized);
+};
+
+const countUsers = () => {
+  const db = getDatabase();
+  const result = db.prepare('SELECT COUNT(*) as total FROM users').get();
+  return Number(result?.total || 0);
+};
+
+const createLocalUser = ({ username, email = null, passwordHash, displayName, ipAddress, defaultRole = 'member' }) => {
+  const db = getDatabase();
+  const normalizedUsername = String(username || '').trim().toLowerCase();
+  const normalizedEmail = email ? String(email).trim().toLowerCase() : null;
+  const timestamp = nowIso();
+
+  const result = db.prepare(`
+    INSERT INTO users (
+      google_sub, username, email, auth_provider, password_hash,
+      display_name, avatar_url, role, first_ip, last_ip, created_at, updated_at, last_login_at
+    ) VALUES (?, ?, ?, 'local', ?, ?, NULL, ?, ?, ?, ?, ?, ?)
+  `).run(
+    `local:${normalizedUsername}`,
+    normalizedUsername,
+    normalizedEmail,
+    passwordHash,
+    displayName,
+    normalizeRole(defaultRole),
+    ipAddress,
+    ipAddress,
+    timestamp,
+    timestamp,
+    timestamp,
+  );
+
+  return db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
+};
+
 const upsertUserFromGoogle = ({ profile, ipAddress, defaultRole = 'member' }) => {
   const db = getDatabase();
   const googleSub = String(profile.id);
@@ -103,9 +175,9 @@ const upsertUserFromGoogle = ({ profile, ipAddress, defaultRole = 'member' }) =>
   if (!existing) {
     const insert = db.prepare(`
       INSERT INTO users (
-        google_sub, email, display_name, avatar_url, role,
+        google_sub, username, email, auth_provider, password_hash, display_name, avatar_url, role,
         first_ip, last_ip, created_at, updated_at, last_login_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, NULL, ?, 'google', NULL, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const result = insert.run(
@@ -130,7 +202,7 @@ const upsertUserFromGoogle = ({ profile, ipAddress, defaultRole = 'member' }) =>
 
   db.prepare(`
     UPDATE users
-    SET email = ?, display_name = ?, avatar_url = ?, role = ?, first_ip = ?, last_ip = ?, updated_at = ?, last_login_at = ?
+    SET email = ?, auth_provider = 'google', display_name = ?, avatar_url = ?, role = ?, first_ip = ?, last_ip = ?, updated_at = ?, last_login_at = ?
     WHERE id = ?
   `).run(
     email || existing.email,
@@ -147,6 +219,18 @@ const upsertUserFromGoogle = ({ profile, ipAddress, defaultRole = 'member' }) =>
   return db.prepare('SELECT * FROM users WHERE id = ?').get(existing.id);
 };
 
+const touchUserLogin = ({ userId, ipAddress }) => {
+  const db = getDatabase();
+  const timestamp = nowIso();
+  db.prepare(`
+    UPDATE users
+    SET last_ip = ?, updated_at = ?, last_login_at = ?
+    WHERE id = ?
+  `).run(ipAddress, timestamp, timestamp, userId);
+
+  return db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+};
+
 const setUserRole = ({ userId, role }) => {
   const db = getDatabase();
   const timestamp = nowIso();
@@ -156,7 +240,7 @@ const setUserRole = ({ userId, role }) => {
 
 const listUsers = () => {
   const db = getDatabase();
-  return db.prepare('SELECT id, email, display_name, avatar_url, role, first_ip, last_ip, created_at, updated_at, last_login_at FROM users ORDER BY created_at DESC').all();
+  return db.prepare('SELECT id, username, email, auth_provider, display_name, avatar_url, role, first_ip, last_ip, created_at, updated_at, last_login_at FROM users ORDER BY created_at DESC').all();
 };
 
 const createThread = ({ title, body, authorUserId }) => {
@@ -242,8 +326,14 @@ const recordAuditEvent = ({ actorUserId = null, eventType, payload }) => {
 module.exports = {
   initDb,
   getDatabase,
+  countUsers,
+  createLocalUser,
+  findUserByLogin,
+  findUserByUsername,
   upsertUserFromGoogle,
   findUserByGoogleSub,
+  findUserByEmail,
+  touchUserLogin,
   listUsers,
   setUserRole,
   createThread,

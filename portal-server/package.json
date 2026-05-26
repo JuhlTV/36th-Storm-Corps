@@ -2,13 +2,14 @@
   "name": "36th-storm-corps-portal-server",
   "version": "1.0.0",
   "private": true,
-  "description": "Backend for the 36th Storm Corps portal with Google login, RBAC, and forum APIs.",
+  "description": "Backend for the 36th Storm Corps portal with local login, optional Google OAuth, RBAC, and forum APIs.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "better-sqlite3": "^11.10.0",
     "connect-sqlite3": "^0.9.16",
     "dotenv": "^16.4.7",

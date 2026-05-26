@@ -18,6 +18,16 @@ const forumAdminSection = document.getElementById('forum-admin-section');
 const forumUserList = document.getElementById('forum-user-list');
 const forumAdminNote = document.getElementById('forum-admin-note');
 const forumAdminRefresh = document.getElementById('forum-admin-refresh');
+const forumLoginForm = document.getElementById('forum-login-form');
+const forumLoginIdentity = document.getElementById('forum-login-identity');
+const forumLoginPassword = document.getElementById('forum-login-password');
+const forumLoginNote = document.getElementById('forum-login-note');
+const forumRegisterForm = document.getElementById('forum-register-form');
+const forumRegisterUsername = document.getElementById('forum-register-username');
+const forumRegisterDisplay = document.getElementById('forum-register-display');
+const forumRegisterEmail = document.getElementById('forum-register-email');
+const forumRegisterPassword = document.getElementById('forum-register-password');
+const forumRegisterNote = document.getElementById('forum-register-note');
 
 let selectedThreadId = null;
 let currentUser = null;
@@ -63,7 +73,7 @@ const renderAuthState = async () => {
 
   if (ownerLockInfo?.ipLockEnabled) {
     forumOwnerState.textContent = ownerLockInfo.ipAudit ? 'IP-Lock aktiv' : 'IP-Lock aktiv';
-  } else if (ownerLockInfo?.email || ownerLockInfo?.googleSub) {
+  } else if (ownerLockInfo?.username || ownerLockInfo?.email || ownerLockInfo?.googleSub) {
     forumOwnerState.textContent = 'Owner konfiguriert';
   } else {
     forumOwnerState.textContent = 'Noch nicht gesetzt';
@@ -236,7 +246,7 @@ forumThreadForm?.addEventListener('submit', async (event) => {
   event.preventDefault();
 
   if (!currentUser) {
-    window.location.href = '/auth/google';
+    forumThreadFormNote.textContent = 'Bitte zuerst einloggen.';
     return;
   }
 
@@ -257,7 +267,7 @@ forumReplyForm?.addEventListener('submit', async (event) => {
   event.preventDefault();
 
   if (!currentUser) {
-    window.location.href = '/auth/google';
+    forumReplyFormNote.textContent = 'Bitte zuerst einloggen.';
     return;
   }
 
@@ -274,6 +284,56 @@ forumReplyForm?.addEventListener('submit', async (event) => {
 
   forumReplyBody.value = '';
   await loadThread(selectedThreadId);
+});
+
+forumLoginForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  try {
+    const login = forumLoginIdentity.value.trim();
+    const password = forumLoginPassword.value;
+
+    await apiFetch('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ login, password }),
+    });
+
+    forumLoginPassword.value = '';
+    forumLoginNote.textContent = 'Login erfolgreich.';
+    await renderAuthState();
+    if (currentUser && ['owner', 'admin'].includes(currentUser.role)) {
+      await loadAdminUsers();
+    }
+    await loadThreads();
+  } catch (error) {
+    forumLoginNote.textContent = error.message;
+  }
+});
+
+forumRegisterForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  try {
+    const username = forumRegisterUsername.value.trim();
+    const displayName = forumRegisterDisplay.value.trim();
+    const email = forumRegisterEmail.value.trim();
+    const password = forumRegisterPassword.value;
+
+    await apiFetch('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ username, displayName, email, password }),
+    });
+
+    forumRegisterPassword.value = '';
+    forumRegisterNote.textContent = 'Registrierung erfolgreich. Du bist jetzt eingeloggt.';
+    await renderAuthState();
+    if (currentUser && ['owner', 'admin'].includes(currentUser.role)) {
+      await loadAdminUsers();
+    }
+    await loadThreads();
+  } catch (error) {
+    forumRegisterNote.textContent = error.message;
+  }
 });
 
 (async () => {

@@ -33,12 +33,56 @@
       <div class="container">
         <p class="eyebrow">Portal-Netzwerk</p>
         <h1>Forum</h1>
-        <p class="lead">Threads, Antworten, Rechte und Moderation laufen ueber das neue Backend. Anmeldung erfolgt per Google Account.</p>
+        <p class="lead">Threads, Antworten, Rechte und Moderation laufen ueber das Backend. Anmeldung funktioniert lokal mit Username und Passwort.</p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="/auth/google" id="forum-login-link">Mit Google anmelden</a>
+          <a class="btn btn-primary" href="#forum-auth">Login / Registrieren</a>
           <button class="btn btn-ghost" type="button" id="forum-refresh-btn">Threads aktualisieren</button>
           <button class="btn btn-ghost" type="button" id="forum-logout-btn">Abmelden</button>
         </div>
+      </div>
+    </section>
+
+    <section class="forum-board section-reveal" id="forum-auth">
+      <div class="container forum-grid">
+        <article class="forum-panel">
+          <h2>Login</h2>
+          <form id="forum-login-form" class="forum-form">
+            <label>
+              <span>Username oder E-Mail</span>
+              <input id="forum-login-identity" type="text" maxlength="120" placeholder="z. B. commander36 oder name@mail.de" />
+            </label>
+            <label>
+              <span>Passwort</span>
+              <input id="forum-login-password" type="password" maxlength="160" placeholder="Mindestens 8 Zeichen" />
+            </label>
+            <button class="btn btn-primary" type="submit">Einloggen</button>
+            <p class="forum-note" id="forum-login-note">Noch kein Account? Rechts registrieren.</p>
+          </form>
+        </article>
+
+        <article class="forum-panel">
+          <h2>Registrierung</h2>
+          <form id="forum-register-form" class="forum-form">
+            <label>
+              <span>Username</span>
+              <input id="forum-register-username" type="text" maxlength="32" placeholder="a-z, 0-9, ., _, -" />
+            </label>
+            <label>
+              <span>Anzeigename</span>
+              <input id="forum-register-display" type="text" maxlength="120" placeholder="Wird im Forum angezeigt" />
+            </label>
+            <label>
+              <span>E-Mail (optional)</span>
+              <input id="forum-register-email" type="email" maxlength="160" placeholder="optional" />
+            </label>
+            <label>
+              <span>Passwort</span>
+              <input id="forum-register-password" type="password" maxlength="160" placeholder="Mindestens 8 Zeichen" />
+            </label>
+            <button class="btn btn-primary" type="submit">Registrieren</button>
+            <p class="forum-note" id="forum-register-note">Nach Registrierung bist du direkt eingeloggt.</p>
+          </form>
+        </article>
       </div>
     </section>
 

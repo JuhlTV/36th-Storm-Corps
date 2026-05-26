@@ -4,13 +4,18 @@ const path = require('path');
 const express = require('express');
 const session = require('express-session');
 const SQLiteStoreFactory = require('connect-sqlite3');
+const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const { Strategy: GoogleStrategy } = require('passport-google-oauth20');
 const {
   initDb,
+  countUsers,
+  createLocalUser,
+  findUserByLogin,
   upsertUserFromGoogle,
   listUsers,
   setUserRole,
+  touchUserLogin,
   createThread,
   listThreads,
   getThreadById,
@@ -24,6 +29,7 @@ const app = express();
 const PORT = Number(process.env.PORT || 3000);
 const STATIC_ROOT = path.resolve(__dirname, '..');
 const SESSION_SECRET = process.env.SESSION_SECRET || 'change-me-in-production';
+const OWNER_USERNAME = process.env.OWNER_USERNAME?.trim().toLowerCase() || '';
 const OWNER_EMAIL = process.env.OWNER_EMAIL?.trim().toLowerCase() || '';
 const OWNER_GOOGLE_SUB = process.env.OWNER_GOOGLE_SUB?.trim() || '';
 const OWNER_IP = process.env.OWNER_IP?.trim() || '';
@@ -43,6 +49,7 @@ const getClientIp = (req) => {
 };
 
 const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
+const normalizeUsername = (value) => String(value || '').trim().toLowerCase();
 
 const resolveInitialRole = ({ profile, ipAddress }) => {
   const email = normalizeEmail(profile.emails?.[0]?.value);
@@ -57,6 +64,27 @@ const resolveInitialRole = ({ profile, ipAddress }) => {
   }
 
   if (OWNER_IP_LOCK && OWNER_IP && ipAddress && ipAddress === OWNER_IP) {
+    return 'owner';
+  }
+
+  return 'member';
+};
+
+const resolveInitialLocalRole = ({ username, email, ipAddress, isFirstUser }) => {
+  const ownerMatched = Boolean(
+    (OWNER_USERNAME && username && username === OWNER_USERNAME) ||
+    (OWNER_EMAIL && email && email === OWNER_EMAIL)
+  );
+
+  if (ownerMatched) {
+    return 'owner';
+  }
+
+  if (OWNER_IP_LOCK && OWNER_IP && ipAddress && ipAddress === OWNER_IP) {
+    return 'owner';
+  }
+
+  if (isFirstUser && !OWNER_USERNAME && !OWNER_EMAIL && !OWNER_GOOGLE_SUB) {
     return 'owner';
   }
 
@@ -182,6 +210,116 @@ app.get('/auth/google', (req, res, next) => {
   }
 
   return passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next);
+});
+
+app.post('/auth/register', async (req, res, next) => {
+  try {
+    const username = normalizeUsername(req.body?.username);
+    const displayName = String(req.body?.displayName || '').trim();
+    const email = normalizeEmail(req.body?.email || '');
+    const password = String(req.body?.password || '');
+    const ipAddress = getClientIp(req);
+
+    if (!username || !/^[a-z0-9._-]{3,32}$/.test(username)) {
+      return res.status(400).json({ error: 'Username must be 3-32 chars (a-z, 0-9, ., _, -)' });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Invalid email address' });
+    }
+
+    if (findUserByLogin(username)) {
+      return res.status(409).json({ error: 'Username already exists' });
+    }
+
+    if (email && findUserByLogin(email)) {
+      return res.status(409).json({ error: 'Email already exists' });
+    }
+
+    const role = resolveInitialLocalRole({
+      username,
+      email,
+      ipAddress,
+      isFirstUser: countUsers() === 0,
+    });
+
+    const passwordHash = await bcrypt.hash(password, 12);
+    const user = createLocalUser({
+      username,
+      email: email || null,
+      passwordHash,
+      displayName: displayName || username,
+      ipAddress,
+      defaultRole: role,
+    });
+
+    req.logIn(user, (loginError) => {
+      if (loginError) {
+        return next(loginError);
+      }
+
+      recordAuditEvent({
+        actorUserId: user.id,
+        eventType: 'register',
+        payload: { provider: 'local', username, ipAddress },
+      });
+
+      return res.status(201).json({ user });
+    });
+
+    return undefined;
+  } catch (error) {
+    if (String(error?.message || '').includes('UNIQUE constraint failed')) {
+      return res.status(409).json({ error: 'Username or email already exists' });
+    }
+
+    return next(error);
+  }
+});
+
+app.post('/auth/login', async (req, res, next) => {
+  try {
+    const login = String(req.body?.login || '').trim().toLowerCase();
+    const password = String(req.body?.password || '');
+    const ipAddress = getClientIp(req);
+
+    if (!login || !password) {
+      return res.status(400).json({ error: 'Login and password are required' });
+    }
+
+    const user = findUserByLogin(login);
+    if (!user || !user.password_hash) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const passwordValid = await bcrypt.compare(password, user.password_hash);
+    if (!passwordValid) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const updatedUser = touchUserLogin({ userId: user.id, ipAddress });
+    req.logIn(updatedUser, (loginError) => {
+      if (loginError) {
+        return next(loginError);
+      }
+
+      recordAuditEvent({
+        actorUserId: updatedUser.id,
+        eventType: 'login',
+        payload: { provider: 'local', ipAddress },
+      });
+
+      return res.json({ user: updatedUser });
+    });
+
+    return undefined;
+  } catch (error) {
+    return next(error);
+  }
 });
 
 app.get('/auth/google/callback', (req, res, next) => {
@@ -353,8 +491,13 @@ app.patch('/api/forum/threads/:id/lock', ensureRole(['owner', 'admin', 'moderato
 app.get('/api/bootstrap', (req, res) => {
   res.json({
     currentUser: req.user || null,
-    loginEnabled: Boolean(googleClientId && googleClientSecret),
+    loginEnabled: true,
+    loginMethods: {
+      local: true,
+      google: Boolean(googleClientId && googleClientSecret),
+    },
     owner: {
+      username: OWNER_USERNAME || null,
       email: OWNER_EMAIL || null,
       googleSub: OWNER_GOOGLE_SUB || null,
       ipLockEnabled: OWNER_IP_LOCK,
