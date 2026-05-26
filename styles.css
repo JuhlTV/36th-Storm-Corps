@@ -361,6 +361,19 @@ section[id] {
     linear-gradient(120deg, rgba(31, 183, 185, 0.1), transparent 36%),
     rgba(1, 3, 5, 0.95);
   box-shadow: var(--shadow-level-1);
+  transition: background-color var(--motion-mid) var(--ease-standard), box-shadow var(--motion-mid) var(--ease-standard), border-color var(--motion-mid) var(--ease-standard), backdrop-filter var(--motion-mid) var(--ease-standard), transform var(--motion-mid) var(--ease-standard);
+}
+
+.site-header.is-scrolled {
+  border-bottom-color: rgba(76, 210, 212, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 24%),
+    linear-gradient(120deg, rgba(76, 210, 212, 0.08), transparent 34%),
+    rgba(1, 3, 5, 0.88);
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.48),
+    0 0 0 1px rgba(76, 210, 212, 0.08);
+  backdrop-filter: blur(18px) saturate(150%);
 }
 
 .site-header::before {
@@ -382,6 +395,10 @@ section[id] {
   height: 14px;
   pointer-events: none;
   background: radial-gradient(120% 12px at 50% 0, rgba(31, 183, 185, 0.2), rgba(31, 183, 185, 0));
+}
+
+.site-header.is-scrolled::after {
+  opacity: 0.7;
 }
 
 .nav-wrap {
@@ -511,7 +528,7 @@ section[id] {
   font-weight: var(--fw-medium);
   border: 0;
   background: transparent;
-  transition: color var(--motion-mid) var(--ease-standard), transform var(--motion-mid) var(--ease-standard);
+  transition: color var(--motion-mid) var(--ease-standard), transform var(--motion-mid) var(--ease-standard), opacity var(--motion-mid) var(--ease-standard);
   padding: 0.36rem 0.5rem;
   border-radius: 0.34rem;
   isolation: isolate;
@@ -534,7 +551,7 @@ section[id] {
   font-family: inherit;
   padding: 0.36rem 0.5rem;
   border-radius: 0.34rem;
-  transition: color var(--motion-mid) var(--ease-standard), transform var(--motion-mid) var(--ease-standard);
+  transition: color var(--motion-mid) var(--ease-standard), transform var(--motion-mid) var(--ease-standard), opacity var(--motion-mid) var(--ease-standard);
 }
 
 .dropdown-toggle::after {
@@ -588,6 +605,7 @@ section[id] {
   pointer-events: none;
   transition: opacity var(--motion-mid) var(--ease-standard), transform var(--motion-mid) var(--ease-standard);
   z-index: 35;
+  backdrop-filter: blur(14px) saturate(140%);
 }
 
 .dropdown-menu a {
@@ -610,6 +628,7 @@ section[id] {
 .dropdown-toggle[aria-expanded="true"] {
   color: #f4fbff;
   transform: translateY(-1px);
+  opacity: 1;
 }
 
 .main-nav > a:hover::before,
@@ -3291,6 +3310,11 @@ body {
   box-shadow:
     inset 0 0 0 1px rgba(31, 183, 185, 0.14),
     0 8px 16px rgba(0, 0, 0, 0.28);
+  font-weight: var(--fw-strong);
+}
+
+.main-nav > .nav-dropdown > .dropdown-toggle[aria-expanded="true"] {
+  color: #f4fbff;
 }
 
 @keyframes hero-atmo-pulse {
@@ -3344,6 +3368,14 @@ body::-webkit-scrollbar-thumb:hover {
     linear-gradient(160deg, rgba(76, 210, 212, 0.1), transparent 38%),
     linear-gradient(220deg, rgba(240, 205, 135, 0.08), transparent 45%),
     rgba(3, 7, 12, 0.97);
+  border: 1px solid transparent;
+  transition: border-color var(--motion-mid) var(--ease-standard), background-color var(--motion-mid) var(--ease-standard), transform var(--motion-mid) var(--ease-standard);
+}
+
+.dropdown-menu a:hover {
+  border-color: rgba(76, 210, 212, 0.3);
+  background: linear-gradient(145deg, rgba(76, 210, 212, 0.16), rgba(158, 163, 168, 0.07));
+  transform: translateX(2px);
 }
 
 .dropdown-menu a {

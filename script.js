@@ -48,6 +48,8 @@ const adminModeActive = document.getElementById('admin-mode-active');
 
 let memberCards = Array.from(document.querySelectorAll('.member-card'));
 let currentAdminData = null;
+let scrollSpySection = null;
+let scrollSpyRaf = null;
 const THEME_STORAGE_KEY = 'stormcorps36_theme';
 
 const ICON_PATHS = {
@@ -99,9 +101,9 @@ const ADMIN_SCHEMA_EXAMPLE = {
       description: 'Fuehrt die Corps-Doktrin, Freigaben und operative Endentscheidung im Feldraum.',
     },
     {
-      id: 'CC-2426',
+      id: 'CT-2426',
       callsign: 'Master',
-      rank: 'Commander',
+      rank: 'First Lieutenant',
       specialization: 'Command',
       squad: 'High Command',
       status: 'Active',
@@ -1073,6 +1075,70 @@ const setActiveNavLinks = () => {
   });
 };
 
+const getScrollSpySection = () => {
+  const sections = Array.from(document.querySelectorAll('main section[id]'));
+  const viewportOffset = window.innerHeight * 0.28;
+
+  return sections.reduce((bestSection, section) => {
+    const rect = section.getBoundingClientRect();
+    const distance = Math.abs(rect.top - viewportOffset);
+
+    if (!bestSection || distance < bestSection.distance) {
+      return { section, distance };
+    }
+
+    return bestSection;
+  }, null)?.section ?? null;
+};
+
+const syncHeaderState = () => {
+  if (!document.body) {
+    return;
+  }
+
+  const scrolled = window.scrollY > 14;
+  document.body.classList.toggle('has-scrolled', scrolled);
+  const header = document.querySelector('.site-header');
+  if (header) {
+    header.classList.toggle('is-scrolled', scrolled);
+  }
+};
+
+const updateScrollSpy = () => {
+  scrollSpyRaf = null;
+
+  const section = getScrollSpySection();
+  if (!section || scrollSpySection === section) {
+    return;
+  }
+
+  scrollSpySection = section;
+  const hash = `#${section.id}`;
+
+  if (!mainNav) {
+    return;
+  }
+
+  mainNav.querySelectorAll('a').forEach((link) => {
+    const href = link.getAttribute('href') || '';
+    const isActive = href === hash;
+    link.classList.toggle('is-active', isActive);
+    if (isActive) {
+      link.setAttribute('aria-current', 'page');
+    } else {
+      link.removeAttribute('aria-current');
+    }
+  });
+};
+
+const requestScrollSpyUpdate = () => {
+  if (scrollSpyRaf !== null) {
+    return;
+  }
+
+  scrollSpyRaf = window.requestAnimationFrame(updateScrollSpy);
+};
+
 if (adminSchema) {
   adminSchema.textContent = JSON.stringify(ADMIN_SCHEMA_EXAMPLE, null, 2);
 }
@@ -1081,6 +1147,8 @@ ensureThemeSwitcher();
 applyTheme(getStoredTheme() || 'tactical', false);
 applySectionIcons();
 initPageTransitions();
+syncHeaderState();
+requestScrollSpyUpdate();
 
 if (yearNode) {
   yearNode.textContent = new Date().getFullYear();
@@ -1323,6 +1391,17 @@ document.addEventListener('keydown', (event) => {
 
 window.addEventListener('hashchange', setActiveNavLinks);
 setActiveNavLinks();
+
+window.addEventListener('scroll', () => {
+  syncHeaderState();
+  requestScrollSpyUpdate();
+}, { passive: true });
+
+window.addEventListener('resize', () => {
+  syncHeaderState();
+  requestScrollSpyUpdate();
+  closeMenus();
+}, { passive: true });
 
 if (memberSearch && memberRank && memberSpec && memberSquad && memberStatus) {
   [memberSearch, memberRank, memberSpec, memberSquad, memberStatus].forEach((control) => {

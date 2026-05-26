@@ -18,6 +18,10 @@
       }
     ]
   },
+  "statusboard": {
+    "readiness": "Aurek-1",
+    "channel": "COM-NET 36.7"
+  },
   "trailer": {
     "mode": "youtube-first",
     "title": "TRAILER FEED: STORMCORPS_36TH",
@@ -25,10 +29,6 @@
     "youtubeUrl": "https://www.youtube.com/watch?v=Xf1cfemeX_U",
     "mp4Url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
     "posterUrl": "https://images.unsplash.com/photo-1518331647614-3004c5fbecc3?auto=format&fit=crop&w=1400&q=80"
-  },
-  "statusboard": {
-    "readiness": "Aurek-1",
-    "channel": "COM-NET 36.7"
   },
   "members": [
     {
@@ -41,9 +41,9 @@
       "description": "Fuehrt die Corps-Doktrin, Freigaben und operative Endentscheidung im Feldraum."
     },
     {
-      "id": "CC-2426",
+      "id": "CT-2426",
       "callsign": "Master",
-      "rank": "Commander",
+      "rank": "First Lieutenant",
       "specialization": "Command",
       "squad": "High Command",
       "status": "Active",
