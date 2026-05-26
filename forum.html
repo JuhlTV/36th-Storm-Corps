@@ -44,7 +44,18 @@
 
     <section class="forum-board section-reveal" id="forum-auth">
       <div class="container forum-grid">
-        <article class="forum-panel">
+        <article class="forum-panel forum-auth-intro">
+          <p class="eyebrow">Secure Access</p>
+          <h2>Portal Login</h2>
+          <p class="forum-intro-copy">Registrierung und Anmeldung laufen lokal, ohne Client ID, Secret oder fremde Domain. Accounts werden verschluesselt gespeichert und der Zugang bleibt kontrollierbar.</p>
+          <div class="forum-pill-row" aria-label="Portal Vorteile">
+            <span class="forum-pill">Verschluesselt at rest</span>
+            <span class="forum-pill">Keine Domain noetig</span>
+            <span class="forum-pill">Owner / Admin Rollen</span>
+          </div>
+        </article>
+
+        <article class="forum-panel forum-auth-card">
           <h2>Login</h2>
           <form id="forum-login-form" class="forum-form">
             <label>
@@ -60,7 +71,7 @@
           </form>
         </article>
 
-        <article class="forum-panel">
+        <article class="forum-panel forum-auth-card">
           <h2>Registrierung</h2>
           <form id="forum-register-form" class="forum-form">
             <label>
@@ -88,10 +99,10 @@
 
     <section class="forum-status section-reveal">
       <div class="container statusboard-grid forum-status-grid">
-        <article><span>Status</span><strong id="forum-auth-state">Lade...</strong></article>
-        <article><span>Rolle</span><strong id="forum-role-state">-</strong></article>
-        <article><span>Owner-Lock</span><strong id="forum-owner-state">-</strong></article>
-        <article><span>Threads</span><strong id="forum-thread-count">0</strong></article>
+        <article class="forum-status-card"><span>Status</span><strong id="forum-auth-state">Lade...</strong></article>
+        <article class="forum-status-card"><span>Rolle</span><strong id="forum-role-state">-</strong></article>
+        <article class="forum-status-card"><span>Owner-Lock</span><strong id="forum-owner-state">-</strong></article>
+        <article class="forum-status-card"><span>Threads</span><strong id="forum-thread-count">0</strong></article>
       </div>
     </section>
 
@@ -149,15 +160,20 @@
 
     <section class="forum-board section-reveal" id="forum-admin-section" hidden>
       <div class="container forum-grid forum-admin-grid">
-        <article class="forum-panel forum-admin-panel">
+        <article class="forum-panel forum-admin-panel forum-admin-focus">
           <h2>Rollenverwaltung</h2>
-          <p class="forum-note">Nur Owner, Admins und Moderatoren mit Freigabe sehen diesen Bereich.</p>
+          <p class="forum-note">Nur Owner, Admins und Moderatoren mit Freigabe sehen diesen Bereich. Rollen werden direkt im Portal gesetzt und im Backend gespeichert.</p>
           <div id="forum-user-list" class="forum-user-list"></div>
         </article>
 
         <article class="forum-panel forum-admin-panel">
           <h2>Rollenstatus</h2>
           <p class="forum-note" id="forum-admin-note">Lade...</p>
+          <div class="forum-admin-summary">
+            <span class="forum-pill">Schnellzugriff</span>
+            <span class="forum-pill">Live-Rollen</span>
+            <span class="forum-pill">Audit-ready</span>
+          </div>
           <div class="forum-admin-actions">
             <button class="btn btn-ghost" type="button" id="forum-admin-refresh">Nutzer aktualisieren</button>
           </div>
