@@ -51,6 +51,10 @@ let currentAdminData = null;
 let scrollSpySection = null;
 let scrollSpyRaf = null;
 const THEME_STORAGE_KEY = 'stormcorps36_theme';
+const FILTER_STORAGE_KEY = 'stormcorps36_filters';
+let filterDebounceTimer = null;
+let lastFilterState = {};
+let currentSortBy = 'name'; // 'name', 'rank', 'squad', 'status'
 
 const ICON_PATHS = {
   lore: 'M4 4.5A2.5 2.5 0 016.5 2H19v16H6.5A2.5 2.5 0 004 20.5V4.5zm2 .5v12.8c.16-.05.33-.08.5-.08H17V4H6.5A1 1 0 006 5zM8 7h7v1.5H8V7zm0 3h7v1.5H8V10z',
@@ -236,6 +240,27 @@ const escapeHtml = (value) => String(value)
   .replaceAll('>', '&gt;')
   .replaceAll('"', '&quot;')
   .replaceAll("'", '&#39;');
+
+const debounce = (fn, delay = 200) => {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn(...args), delay);
+  };
+};
+
+const memoize = (fn) => {
+  const cache = new Map();
+  return (...args) => {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+    const result = fn(...args);
+    cache.set(key, result);
+    return result;
+  };
+};
 
 const normalizeValue = (value) => String(value ?? '')
   .trim()
@@ -425,6 +450,43 @@ const getStoredTheme = () => {
     return normalizeTheme(raw);
   } catch {
     return null;
+  }
+};
+
+const saveFilterState = (state) => {
+  try {
+    window.localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(state));
+    lastFilterState = state;
+  } catch {
+    // Ignore storage restrictions
+  }
+};
+
+const getStoredFilterState = () => {
+  try {
+    const raw = window.localStorage.getItem(FILTER_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
+
+const restoreFilterState = () => {
+  const state = getStoredFilterState();
+  if (memberSearch && state.search) {
+    memberSearch.value = state.search;
+  }
+  if (memberRank && state.rank) {
+    memberRank.value = state.rank;
+  }
+  if (memberSpec && state.spec) {
+    memberSpec.value = state.spec;
+  }
+  if (memberSquad && state.squad) {
+    memberSquad.value = state.squad;
+  }
+  if (memberStatus && state.status) {
+    memberStatus.value = state.status;
   }
 };
 
@@ -711,6 +773,9 @@ const applyMemberFilters = () => {
   const squadFilter = memberSquad.value;
   const statusFilter = memberStatus.value;
 
+  const currentState = { search: memberSearch.value, rank: rankFilter, spec: specFilter, squad: squadFilter, status: statusFilter };
+  saveFilterState(currentState);
+
   let visibleCount = 0;
 
   memberCards.forEach((card) => {
@@ -727,7 +792,11 @@ const applyMemberFilters = () => {
     const matchesStatus = statusFilter === 'all' || status === statusFilter;
 
     const isVisible = matchesSearch && matchesRank && matchesSpec && matchesSquad && matchesStatus;
-    card.hidden = !isVisible;
+    
+    if (card.hidden !== !isVisible) {
+      card.hidden = !isVisible;
+      card.setAttribute('aria-hidden', String(!isVisible));
+    }
 
     if (isVisible) {
       visibleCount += 1;
@@ -735,8 +804,52 @@ const applyMemberFilters = () => {
   });
 
   if (memberEmpty) {
-    memberEmpty.hidden = visibleCount > 0;
+    const isEmpty = visibleCount === 0;
+    memberEmpty.hidden = !isEmpty;
+    memberEmpty.setAttribute('aria-live', 'polite');
+    memberEmpty.setAttribute('role', 'status');
   }
+};
+
+const debouncedFilterApply = debounce(applyMemberFilters, 180);
+
+const sortMemberCards = (sortBy = 'name') => {
+  if (!memberGrid || memberCards.length === 0) {
+    return;
+  }
+
+  currentSortBy = sortBy;
+  const sortedCards = [...memberCards].sort((a, b) => {
+    let aVal = '';
+    let bVal = '';
+
+    switch (sortBy) {
+      case 'rank':
+        aVal = a.dataset.rank || '';
+        bVal = b.dataset.rank || '';
+        break;
+      case 'squad':
+        aVal = a.dataset.squad || '';
+        bVal = b.dataset.squad || '';
+        break;
+      case 'status':
+        aVal = a.dataset.status || '';
+        bVal = b.dataset.status || '';
+        break;
+      default: // 'name'
+        aVal = normalizeValue(a.dataset.name || '');
+        bVal = normalizeValue(b.dataset.name || '');
+    }
+
+    return aVal.localeCompare(bVal, 'de');
+  });
+
+  memberGrid.innerHTML = '';
+  sortedCards.forEach((card) => {
+    memberGrid.appendChild(card);
+  });
+
+  memberCards = Array.from(memberGrid.querySelectorAll('.member-card'));
 };
 
 const renderMembers = (members) => {
@@ -768,7 +881,7 @@ const renderMembers = (members) => {
     const cardText = `${member.id ?? ''} ${member.callsign ?? ''} ${rankLabel} ${specLabel} ${squadLabel}`.trim();
 
     return `
-      <article class="member-card" data-name="${escapeHtml(cardText)}" data-rank="${escapeHtml(rankKey)}" data-spec="${escapeHtml(specKey)}" data-squad="${escapeHtml(squadKey)}" data-status="${escapeHtml(statusKey)}">
+      <article class="member-card" data-name="${escapeHtml(cardText)}" data-rank="${escapeHtml(rankKey)}" data-spec="${escapeHtml(specKey)}" data-squad="${escapeHtml(squadKey)}" data-status="${escapeHtml(statusKey)}" role="article">
         <h3>${escapeHtml(member.id ?? 'CT-0000')} "${escapeHtml(member.callsign ?? 'Unknown')}"</h3>
         <p class="member-rank">${escapeHtml(rankLabel)}</p>
         <p>${escapeHtml(specLabel)} | Squad ${escapeHtml(squadLabel)} | ${escapeHtml(member.description ?? 'Keine Beschreibung.')}</p>
@@ -785,6 +898,7 @@ const renderMembers = (members) => {
   setSelectOptions(memberStatus, statusMap, 'Alle');
 
   applyMemberFilters();
+  sortMemberCards(currentSortBy);
 
   if (sbActiveMembers) {
     const activeCount = members.filter((member) => toFilterKey(member.status) === 'active').length;
@@ -1405,10 +1519,20 @@ window.addEventListener('resize', () => {
 
 if (memberSearch && memberRank && memberSpec && memberSquad && memberStatus) {
   [memberSearch, memberRank, memberSpec, memberSquad, memberStatus].forEach((control) => {
-    control.addEventListener('input', applyMemberFilters);
+    control.addEventListener('input', debouncedFilterApply);
     control.addEventListener('change', applyMemberFilters);
   });
 
+  // Keyboard navigation enhancement: Reset filters with Escape
+  memberSearch.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && memberSearch.value) {
+      memberSearch.value = '';
+      memberSearch.focus();
+      applyMemberFilters();
+    }
+  });
+
+  restoreFilterState();
   applyMemberFilters();
 }
 
