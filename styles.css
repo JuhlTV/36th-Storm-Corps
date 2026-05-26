@@ -363,7 +363,6 @@ section[id] {
   box-shadow: var(--shadow-level-1);
   transition: background-color var(--motion-mid) var(--ease-standard), box-shadow var(--motion-mid) var(--ease-standard), border-color var(--motion-mid) var(--ease-standard), backdrop-filter var(--motion-mid) var(--ease-standard), transform var(--motion-mid) var(--ease-standard);
 }
-
 .site-header.is-scrolled {
   border-bottom-color: rgba(76, 210, 212, 0.2);
   background:
@@ -615,7 +614,6 @@ section[id] {
   opacity: 0.95;
   border-radius: 0.42rem;
 }
-
 .nav-dropdown.open .dropdown-menu,
 .nav-dropdown:focus-within .dropdown-menu {
   opacity: 1;
@@ -722,9 +720,10 @@ main::before {
   pointer-events: none;
   background:
     radial-gradient(circle at 18% 14%, rgba(31, 183, 185, 0.18), transparent 30%),
-    radial-gradient(circle at 86% 28%, rgba(158, 163, 168, 0.12), transparent 34%),
+    radial-gradient(circle at 18% 14%, rgba(31, 183, 185, 0.22), transparent 28%),
+    radial-gradient(circle at 84% 24%, rgba(240, 205, 135, 0.18), transparent 30%),
+    radial-gradient(circle at 48% 78%, rgba(76, 210, 212, 0.08), transparent 38%),
     linear-gradient(180deg, rgba(228, 195, 122, 0.08), rgba(228, 195, 122, 0));
-  z-index: 0;
 }
 
 .hero::after {
@@ -733,8 +732,9 @@ main::before {
   inset: 0;
   background:
     linear-gradient(94deg, rgba(1, 3, 5, 0.985) 0%, rgba(1, 3, 5, 0.92) 30%, rgba(1, 3, 5, 0.4) 60%, rgba(1, 3, 5, 0.94) 100%),
-    radial-gradient(circle at 68% 38%, rgba(31, 183, 185, 0.12), transparent 28%);
-  pointer-events: none;
+    linear-gradient(94deg, rgba(1, 3, 5, 0.99) 0%, rgba(1, 3, 5, 0.92) 26%, rgba(1, 3, 5, 0.35) 58%, rgba(1, 3, 5, 0.96) 100%),
+    radial-gradient(circle at 68% 38%, rgba(31, 183, 185, 0.14), transparent 28%),
+    radial-gradient(circle at 24% 78%, rgba(240, 205, 135, 0.08), transparent 26%);
   z-index: 0;
 }
 
