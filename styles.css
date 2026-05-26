@@ -3978,6 +3978,12 @@ body.page-privacy {
   padding: 0 0 4.4rem;
 }
 
+/* Legal pages do not load the main reveal script, so keep content visible by default. */
+.page-privacy .section-reveal {
+  opacity: 1;
+  transform: none;
+}
+
 .privacy-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
