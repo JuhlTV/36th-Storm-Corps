@@ -174,7 +174,7 @@ body.intro-exit main {
 .briefing-crawl-content {
   width: min(84ch, 94vw);
   padding-inline: clamp(0.5rem, 2vw, 1.2rem);
-  text-align: center;
+  text-align: left;
   color: #ecdcae;
   text-shadow:
     0 0 20px rgba(228, 195, 122, 0.22),
@@ -183,10 +183,21 @@ body.intro-exit main {
   will-change: transform, opacity;
 }
 
+.briefing-label {
+  text-align: left;
+  margin: 0;
+}
+
 .briefing-crawl-content h1 {
+  text-align: center;
   font-size: clamp(1.45rem, 3.6vw, 2.55rem);
   letter-spacing: 0.18em;
   margin-bottom: 0.2rem;
+}
+
+.briefing-unit {
+  text-align: left;
+  margin: 0;
 }
 
 .briefing-crawl-text {
