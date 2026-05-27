@@ -199,6 +199,34 @@ p,
     var(--refresh-surface-strong);
 }
 
+.forum-hero .lead {
+  max-width: 72ch;
+}
+
+.forum-hero-rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.forum-hero-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.78rem;
+  border-radius: 999px;
+  border: 1px solid rgba(111, 233, 248, 0.22);
+  background:
+    linear-gradient(145deg, rgba(111, 233, 248, 0.12), rgba(255, 138, 100, 0.06)),
+    rgba(4, 11, 17, 0.82);
+  color: #eef8ff;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
+}
+
 .forum-status-card::after {
   opacity: 0.9;
 }
@@ -301,6 +329,14 @@ p,
   .privacy-hero {
     padding-top: 6.4rem;
     padding-bottom: 3rem;
+  }
+
+  .forum-hero-rail {
+    gap: 0.45rem;
+  }
+
+  .forum-hero-chip {
+    width: 100%;
   }
 
   .hero-actions {
