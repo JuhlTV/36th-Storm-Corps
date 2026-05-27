@@ -74,18 +74,25 @@ const revealForumSections = () => {
 };
 
 const apiFetch = async (url, options = {}) => {
-  const response = await fetch(url, {
-    credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
-    ...options,
-  });
+  try {
+    const response = await window.StormCorpsApi.apiFetchRaw(url, {
+      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+      ...options,
+    });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error || `Request failed: ${response.status}`);
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.error || `Request failed: ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    if (String(error?.message || '').startsWith('Request failed:') || error?.message === 'Not authenticated' || error?.message === 'Insufficient permissions') {
+      throw error;
+    }
   }
 
-  return response.json();
+  throw new Error('Portal API ist nicht erreichbar. Starte den Portal-Server auf Port 3000.');
 };
 
 const renderAuthState = async () => {

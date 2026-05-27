@@ -6,7 +6,6 @@ const briefingScreen = document.getElementById('briefing-screen');
 const briefingEnter = document.getElementById('briefing-enter');
 const briefingCrawlCopy = document.getElementById('briefing-crawl-copy');
 const briefingSoundToggle = document.getElementById('briefing-sound-toggle');
-const briefingPersistToggle = document.getElementById('briefing-persist-toggle');
 const briefingAudioHint = document.getElementById('briefing-audio-hint');
 const briefingMusic = document.getElementById('briefing-music');
 const navDropdown = document.querySelector('.nav-dropdown');
@@ -53,7 +52,6 @@ let scrollSpySection = null;
 let scrollSpyRaf = null;
 const THEME_STORAGE_KEY = 'stormcorps36_theme';
 const FILTER_STORAGE_KEY = 'stormcorps36_filters';
-const INTRO_SKIP_STORAGE_KEY = 'stormcorps36_intro_skip';
 let filterDebounceTimer = null;
 let lastFilterState = {};
 let currentSortBy = 'name'; // 'name', 'rank', 'squad', 'status'
@@ -387,26 +385,6 @@ const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const normalizeTheme = (theme) => {
   const key = toFilterKey(theme);
   return key === 'cinematic' ? 'cinematic' : 'tactical';
-};
-
-const getIntroSkipPreference = () => {
-  try {
-    return window.localStorage.getItem(INTRO_SKIP_STORAGE_KEY) === '1';
-  } catch {
-    return false;
-  }
-};
-
-const setIntroSkipPreference = (enabled) => {
-  try {
-    if (enabled) {
-      window.localStorage.setItem(INTRO_SKIP_STORAGE_KEY, '1');
-    } else {
-      window.localStorage.removeItem(INTRO_SKIP_STORAGE_KEY);
-    }
-  } catch {
-    // Ignore storage restrictions.
-  }
 };
 
 const iconSvg = (icon, label) => {
@@ -1293,13 +1271,7 @@ if (yearNodes.length > 0) {
   });
 }
 
-const shouldSkipIntroByPreference = briefingScreen && getIntroSkipPreference();
-if (shouldSkipIntroByPreference) {
-  briefingScreen.classList.add('hidden');
-  document.body.classList.remove('intro-active');
-}
-
-if (briefingScreen && briefingEnter && !shouldSkipIntroByPreference) {
+if (briefingScreen && briefingEnter) {
   let briefingHideTimer = null;
   let briefingExitTimer = null;
   let briefingMusicTimer = null;
@@ -1310,7 +1282,6 @@ if (briefingScreen && briefingEnter && !shouldSkipIntroByPreference) {
   let briefingSfxEnabled = false;
   let briefingAudioContext = null;
   let briefingKeydownBound = false;
-  let briefingPersistEnabled = getIntroSkipPreference();
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -1359,15 +1330,6 @@ if (briefingScreen && briefingEnter && !shouldSkipIntroByPreference) {
     }
 
     briefingAudioHint.hidden = !isVisible;
-  };
-
-  const syncBriefingPersistToggle = () => {
-    if (!briefingPersistToggle) {
-      return;
-    }
-
-    briefingPersistToggle.setAttribute('aria-pressed', String(briefingPersistEnabled));
-    briefingPersistToggle.textContent = briefingPersistEnabled ? 'AUTO-SKIP: AN' : 'AUTO-SKIP: AUS';
   };
 
   const clearBriefingMusicTimers = () => {
@@ -1610,14 +1572,6 @@ if (briefingScreen && briefingEnter && !shouldSkipIntroByPreference) {
     if (key === 's') {
       event.preventDefault();
       toggleBriefingSfx();
-      return;
-    }
-
-    if (key === 'i') {
-      event.preventDefault();
-      briefingPersistEnabled = !briefingPersistEnabled;
-      setIntroSkipPreference(briefingPersistEnabled);
-      syncBriefingPersistToggle();
     }
   };
 
@@ -1635,15 +1589,6 @@ if (briefingScreen && briefingEnter && !shouldSkipIntroByPreference) {
   if (briefingSoundToggle) {
     briefingSoundToggle.setAttribute('aria-keyshortcuts', 'S');
   }
-  if (briefingPersistToggle) {
-    briefingPersistToggle.setAttribute('aria-keyshortcuts', 'I');
-    briefingPersistToggle.addEventListener('click', () => {
-      briefingPersistEnabled = !briefingPersistEnabled;
-      setIntroSkipPreference(briefingPersistEnabled);
-      syncBriefingPersistToggle();
-    });
-  }
-  syncBriefingPersistToggle();
 
   document.addEventListener('keydown', handleBriefingKeydown);
   briefingKeydownBound = true;

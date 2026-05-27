@@ -7,11 +7,11 @@ This folder contains the backend scaffold for the portal upgrade.
 - Local username/password login (no domain required)
 - Optional Google OAuth login
 - Encrypted account store file for local credentials (`data/auth.enc.json`)
+- File-based JSON persistence for users/forum (`data/portal-data.json`)
 - Session-based auth
 - Role-based access control for owner/admin/moderator/member
 - Forum thread and post APIs
 - Admin role management from the forum UI
-- SQLite persistence
 - Optional owner IP audit/lock support
 
 ## Setup
@@ -34,3 +34,8 @@ This folder contains the backend scaffold for the portal upgrade.
 - IP binding is supported as an optional lock via `OWNER_IP_LOCK=true`, but it should be treated as an additional restriction, not the only identity factor.
 - If `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set, Google OAuth routes remain available as optional fallback.
 - The backend also exposes `/api/users` and `/api/forum/*` for future React, Vue, or plain JS frontends.
+
+## Ops
+- `npm run backup` creates a dated backup of `data/portal-data.json` and `data/auth.enc.json` and validates the copied files.
+- `npm run verify-backup` checks the newest backup directory for a valid portal store and encrypted auth wrapper.
+- `npm run health-check` queries the local `/health` endpoint and prints the response payload.

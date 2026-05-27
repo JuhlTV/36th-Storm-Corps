@@ -6,12 +6,13 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "backup": "node scripts/backup-store.js",
+    "verify-backup": "node scripts/verify-backup.js",
+    "health-check": "node -e \"fetch('http://localhost:3000/health').then(async (res) => { const body = await res.json(); console.log(JSON.stringify({ status: res.status, body }, null, 2)); }).catch((error) => { console.error(error); process.exit(1); })\""
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^11.10.0",
-    "connect-sqlite3": "^0.9.16",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-session": "^1.18.1",

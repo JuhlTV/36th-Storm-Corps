@@ -56,7 +56,7 @@
   --motion-fast: 160ms;
   --motion-mid: 260ms;
   --motion-slow: 420ms;
-  --briefing-crawl-duration: 38s;
+  --briefing-crawl-duration: 42s;
   --gold: #e4c37a;
   --radius-sm: 0.45rem;
   --radius-md: 0.8rem;
@@ -103,13 +103,14 @@ body.intro-active {
   place-items: center;
   padding: 0;
   background:
-    radial-gradient(circle at 50% 16%, rgba(228, 195, 122, 0.2), transparent 34%),
-    radial-gradient(circle at 18% 30%, rgba(106, 169, 255, 0.11), transparent 42%),
-    radial-gradient(circle at 82% 30%, rgba(217, 74, 63, 0.1), transparent 44%),
-    linear-gradient(180deg, rgba(1, 3, 6, 0.92), rgba(1, 3, 6, 0.985));
+    radial-gradient(circle at 10% 18%, rgba(255, 255, 255, 0.12) 0.5px, transparent 1px),
+    radial-gradient(circle at 84% 24%, rgba(255, 255, 255, 0.09) 0.5px, transparent 1px),
+    radial-gradient(circle at 36% 80%, rgba(255, 255, 255, 0.08) 0.5px, transparent 1px),
+    radial-gradient(circle at 64% 66%, rgba(255, 255, 255, 0.08) 0.5px, transparent 1px),
+    #000;
   transition: opacity var(--motion-slow) var(--ease-standard), visibility var(--motion-slow) var(--ease-standard);
   overflow: hidden;
-  backdrop-filter: saturate(118%) contrast(108%);
+  backdrop-filter: none;
 }
 
 .briefing-screen.hidden {
@@ -130,17 +131,12 @@ body.intro-active {
 
 .briefing-screen::before {
   top: 0;
-  background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.99), transparent),
-    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0 1px, transparent 1px 4px);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.98), transparent 68%);
 }
 
 .briefing-screen::after {
   bottom: 0;
-  background:
-    linear-gradient(0deg, rgba(0, 0, 0, 0.99), transparent),
-    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 4px),
-    radial-gradient(circle at 50% 84%, rgba(0, 0, 0, 0.55), transparent 44%);
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.98), transparent 64%);
 }
 
 body .site-header,
@@ -177,12 +173,9 @@ body.intro-exit main {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 50% 30%, rgba(255, 225, 162, 0.16), transparent 34%),
-    radial-gradient(circle at 22% 82%, rgba(106, 169, 255, 0.1), transparent 30%),
-    radial-gradient(circle at 80% 80%, rgba(255, 118, 87, 0.09), transparent 30%);
+  background: radial-gradient(circle at 50% 34%, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.72) 86%);
   z-index: 0;
-  animation: briefing-overlay-drift 10s ease-in-out infinite;
+  animation: none;
 }
 
 .briefing-crawl-viewport::after {
@@ -190,10 +183,8 @@ body.intro-exit main {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 50% 50%, transparent 46%, rgba(0, 0, 0, 0.48) 100%),
-    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.014) 0 1px, transparent 1px 3px);
-  opacity: 0.76;
+  background: radial-gradient(circle at 50% 50%, transparent 44%, rgba(0, 0, 0, 0.58) 100%);
+  opacity: 1;
   z-index: 0;
 }
 
@@ -204,18 +195,16 @@ body.intro-exit main {
   align-items: flex-end;
   justify-content: center;
   overflow: hidden;
-  mask-image: linear-gradient(to top, #000 64%, rgba(0, 0, 0, 0.2) 86%, transparent 100%);
+  mask-image: linear-gradient(to top, #000 60%, rgba(0, 0, 0, 0.14) 84%, transparent 100%);
 }
 
 .briefing-crawl-content {
   width: min(84ch, 94vw);
   padding-inline: clamp(0.5rem, 2vw, 1.2rem);
-  text-align: left;
-  color: #ecdcae;
-  text-shadow:
-    0 0 20px rgba(228, 195, 122, 0.22),
-    0 0 56px rgba(106, 169, 255, 0.12);
-  filter: drop-shadow(0 14px 30px rgba(0, 0, 0, 0.5));
+  text-align: center;
+  color: #feda4a;
+  text-shadow: 0 0 10px rgba(254, 218, 74, 0.22);
+  filter: none;
   animation: briefing-crawl-rise var(--briefing-crawl-duration) linear forwards;
   will-change: transform, opacity;
   position: relative;
@@ -223,46 +212,29 @@ body.intro-exit main {
 }
 
 .briefing-crawl-content::before {
-  content: "";
-  position: absolute;
-  inset: -0.7rem -0.6rem;
-  border: 1px solid rgba(228, 195, 122, 0.16);
-  border-radius: 0.7rem;
-  background:
-    linear-gradient(180deg, rgba(14, 19, 30, 0.18), rgba(14, 19, 30, 0));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 24px 44px rgba(0, 0, 0, 0.3);
-  pointer-events: none;
-  z-index: -1;
+  display: none;
 }
 
 .briefing-label {
-  text-align: left;
+  text-align: center;
   margin: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  width: fit-content;
-  padding: 0.34rem 0.7rem;
-  border: 1px solid rgba(228, 195, 122, 0.34);
-  border-radius: 999px;
-  background: rgba(14, 19, 30, 0.5);
-  font-size: clamp(0.62rem, 0.28vw + 0.56rem, 0.82rem);
-  letter-spacing: 0.16em;
+  display: block;
+  color: #4cc8f0;
+  font-size: clamp(0.78rem, 0.38vw + 0.7rem, 1rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
 }
 
 .briefing-crawl-content h1 {
   display: grid;
-  gap: 0.15rem;
+  gap: 0.2rem;
   text-align: center;
-  font-size: clamp(1.45rem, 3.6vw, 2.55rem);
-  letter-spacing: 0.14em;
-  margin-bottom: 0.2rem;
-  text-shadow:
-    0 0 14px rgba(228, 195, 122, 0.32),
-    0 0 32px rgba(106, 169, 255, 0.18);
-  margin-top: 0.62rem;
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.42rem;
+  text-shadow: 0 0 10px rgba(254, 218, 74, 0.2);
+  margin-top: 0.2rem;
 }
 
 .briefing-title-top,
@@ -271,56 +243,54 @@ body.intro-exit main {
 }
 
 .briefing-title-top {
-  font-size: 0.84em;
-  letter-spacing: 0.2em;
-  color: #f0d9a6;
+  font-size: 0.74em;
+  letter-spacing: 0.14em;
+  color: #feda4a;
 }
 
 .briefing-title-bottom {
-  font-size: 1.04em;
-  letter-spacing: 0.15em;
+  font-size: 1em;
+  letter-spacing: 0.1em;
 }
 
 .briefing-unit {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  display: block;
   text-align: center;
-  margin: 0;
+  margin: 0.15rem 0 0;
 }
 
 .briefing-unit-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.3rem 0.66rem;
-  border: 1px solid rgba(106, 169, 255, 0.34);
-  border-radius: 999px;
-  background: rgba(8, 12, 20, 0.56);
-  letter-spacing: 0.1em;
-  font-size: clamp(0.56rem, 0.2vw + 0.52rem, 0.74rem);
+  display: inline;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  letter-spacing: 0.12em;
+  font-size: clamp(0.64rem, 0.24vw + 0.58rem, 0.84rem);
   text-transform: uppercase;
-  box-shadow: 0 0 0 1px rgba(106, 169, 255, 0.1), 0 8px 20px rgba(0, 0, 0, 0.24);
+  color: rgba(254, 218, 74, 0.9);
 }
 
 .briefing-unit-divider {
-  width: 0.35rem;
-  height: 0.35rem;
-  border-radius: 50%;
-  background: rgba(228, 195, 122, 0.56);
-  box-shadow: 0 0 10px rgba(228, 195, 122, 0.34);
+  display: inline-block;
+  width: 1.2rem;
+  height: 1px;
+  border-radius: 0;
+  background: rgba(254, 218, 74, 0.6);
+  box-shadow: none;
+  margin: 0 0.45rem 0.2rem;
 }
 
 .briefing-crawl-text {
   display: grid;
-  gap: 1.3rem;
-  margin-top: 1.4rem;
-  font-family: "Orbitron", "Barlow Condensed", sans-serif;
+  gap: 1.1rem;
+  margin-top: 1rem;
+  font-family: "Rajdhani", sans-serif;
   text-transform: uppercase;
-  letter-spacing: 0.17em;
-  font-size: clamp(0.9rem, 0.9vw + 0.52rem, 1.08rem);
-  line-height: 2.08;
+  letter-spacing: 0.08em;
+  font-size: clamp(1rem, 1vw + 0.56rem, 1.35rem);
+  line-height: 1.86;
+  font-weight: 700;
 }
 
 .briefing-crawl-text p {
@@ -371,38 +341,6 @@ body.intro-exit main {
   transition: border-color var(--motion-mid) var(--ease-standard), background var(--motion-mid) var(--ease-standard), transform var(--motion-mid) var(--ease-standard);
 }
 
-.briefing-persist-toggle {
-  position: absolute;
-  right: 1.2rem;
-  bottom: 4.35rem;
-  z-index: 2;
-  border: 1px solid rgba(228, 195, 122, 0.26);
-  border-radius: 999px;
-  background: rgba(11, 18, 28, 0.76);
-  color: #ecdcae;
-  font-family: inherit;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-size: 0.63rem;
-  font-weight: 700;
-  padding: 0.44rem 0.76rem;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.32);
-  cursor: pointer;
-  min-height: 36px;
-  transition: border-color var(--motion-mid) var(--ease-standard), background var(--motion-mid) var(--ease-standard), transform var(--motion-mid) var(--ease-standard);
-}
-
-.briefing-persist-toggle:hover {
-  border-color: rgba(228, 195, 122, 0.45);
-  background: rgba(14, 23, 36, 0.9);
-  transform: translateY(-1px);
-}
-
-.briefing-persist-toggle:focus-visible {
-  outline: 2px solid rgba(228, 195, 122, 0.56);
-  outline-offset: 2px;
-}
-
 .briefing-enter:hover,
 .briefing-enter:focus-visible {
   transform: translateX(-50%) translateY(-1px);
@@ -441,7 +379,7 @@ body.intro-exit main {
 }
 
 .briefing-screen [data-briefing-controls] {
-  animation: briefing-ui-pulse 3.8s ease-in-out infinite;
+  animation: none;
 }
 
 @keyframes briefing-overlay-drift {
@@ -459,7 +397,7 @@ body.intro-exit main {
 
 @keyframes briefing-crawl-rise {
   0% {
-    transform: perspective(1650px) rotateX(66deg) translateY(122%) scale(1.08);
+    transform: perspective(780px) rotateX(25deg) translateY(116%) scale(1);
     opacity: 0;
   }
 
@@ -476,7 +414,7 @@ body.intro-exit main {
   }
 
   100% {
-    transform: perspective(1650px) rotateX(66deg) translateY(-208%) scale(1.16);
+    transform: perspective(780px) rotateX(25deg) translateY(-220%) scale(1);
     opacity: 0;
   }
 }
@@ -1250,6 +1188,15 @@ p {
 .btn:active {
   transform: translateY(-1px);
   filter: brightness(0.98);
+}
+
+.briefing-enter.btn:hover,
+.briefing-enter.btn:focus-visible {
+  transform: translateX(-50%) translateY(-1px);
+}
+
+.briefing-enter.btn:active {
+  transform: translateX(-50%);
 }
 
 .btn:hover::after {
@@ -6462,15 +6409,8 @@ main::after {
     transform: none;
   }
 
-  .briefing-persist-toggle {
-    left: auto;
-    right: 1rem;
-    bottom: 3.95rem;
-    transform: none;
-  }
-
   .briefing-audio-hint {
-    bottom: 6.65rem;
+    bottom: 3.95rem;
     max-width: min(88vw, 24rem);
     text-align: center;
     white-space: normal;

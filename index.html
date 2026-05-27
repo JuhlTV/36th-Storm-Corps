@@ -25,6 +25,7 @@
     rel="stylesheet"
   />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="design-refresh.css" />
 </head>
 <body class="page-home intro-active">
   <a class="skip-link" href="#main-content">Zum Inhalt springen</a>
@@ -55,13 +56,14 @@
         </div>
       </div>
       <button class="btn btn-primary briefing-enter" id="briefing-enter" type="button" data-briefing-controls="true">Ueberspringen</button>
-      <button class="briefing-persist-toggle" id="briefing-persist-toggle" type="button" aria-pressed="false" data-briefing-controls="true">AUTO-SKIP: AUS</button>
       <button class="briefing-sound-toggle" id="briefing-sound-toggle" type="button" aria-pressed="false" data-briefing-controls="true">SFX: OFF</button>
       <p class="briefing-audio-hint" id="briefing-audio-hint" hidden data-briefing-controls="true">Musik startet beim naechsten Klick.</p>
     </div>
   </section>
 
   <audio id="briefing-music" preload="auto" src="KlonkriegerFanfare.wav" aria-hidden="true"></audio>
+
+  <script src="api-config.js"></script>
 
   <header class="site-header" id="top">
     <div class="container nav-wrap">

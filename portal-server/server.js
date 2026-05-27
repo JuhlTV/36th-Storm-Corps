@@ -1,9 +1,9 @@
 require('dotenv').config();
 
+const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const session = require('express-session');
-const SQLiteStoreFactory = require('connect-sqlite3');
 const bcrypt = require('bcryptjs');
 const passport = require('passport');
 const { Strategy: GoogleStrategy } = require('passport-google-oauth20');
@@ -14,6 +14,7 @@ const {
 } = require('./encrypted-auth-store');
 const {
   initDb,
+  getDatabase,
   clearLocalCredentials,
   countUsers,
   createLocalUser,
@@ -43,9 +44,48 @@ const OWNER_GOOGLE_SUB = process.env.OWNER_GOOGLE_SUB?.trim() || '';
 const OWNER_IP = process.env.OWNER_IP?.trim() || '';
 const OWNER_IP_LOCK = String(process.env.OWNER_IP_LOCK || 'false').toLowerCase() === 'true';
 const allowedRoles = new Set(['owner', 'admin', 'moderator', 'member']);
-
-const SQLiteStore = SQLiteStoreFactory(session);
+const dataDir = path.join(__dirname, 'data');
+const errorLogPath = path.join(dataDir, 'error.log');
 initDb();
+
+const sanitizeUser = (user) => {
+  if (!user) {
+    return null;
+  }
+
+  const {
+    password_hash,
+    ...safeUser
+  } = user;
+
+  return safeUser;
+};
+
+const sanitizeUsers = (users) => {
+  if (!Array.isArray(users)) {
+    return [];
+  }
+
+  return users.map((user) => sanitizeUser(user));
+};
+
+const appendErrorLog = ({ type, message, stack, request }) => {
+  try {
+    fs.mkdirSync(dataDir, { recursive: true });
+
+    const entry = {
+      timestamp: new Date().toISOString(),
+      type,
+      message,
+      stack: stack || null,
+      request: request || null,
+    };
+
+    fs.appendFileSync(errorLogPath, `${JSON.stringify(entry)}\n`, 'utf8');
+  } catch (logError) {
+    console.error('Failed to write error log:', logError);
+  }
+};
 
 const getClientIp = (req) => {
   const forwarded = req.headers['x-forwarded-for'];
@@ -179,10 +219,6 @@ if (googleClientId && googleClientSecret) {
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
-  store: new SQLiteStore({
-    db: 'sessions.sqlite',
-    dir: path.join(__dirname, 'data'),
-  }),
   secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
@@ -206,7 +242,35 @@ app.use(express.static(STATIC_ROOT, {
 }));
 
 app.get('/health', (req, res) => {
-  res.json({ ok: true, service: '36th-storm-corps-portal' });
+  let storageOk = true;
+  let storage = 'unknown';
+
+  try {
+    const dbInfo = getDatabase();
+    storage = dbInfo?.mode || 'unknown';
+    countUsers();
+  } catch (error) {
+    storageOk = false;
+    appendErrorLog({
+      type: 'health_check_failed',
+      message: String(error?.message || error),
+      stack: error?.stack || null,
+      request: {
+        method: req.method,
+        path: req.originalUrl,
+        ip: getClientIp(req),
+      },
+    });
+  }
+
+  res.status(storageOk ? 200 : 503).json({
+    ok: storageOk,
+    service: '36th-storm-corps-portal',
+    timestamp: new Date().toISOString(),
+    uptimeSeconds: Math.round(process.uptime()),
+    environment: process.env.NODE_ENV || 'development',
+    storage,
+  });
 });
 
 app.get('/auth/google', (req, res, next) => {
@@ -288,7 +352,7 @@ app.post('/auth/register', async (req, res, next) => {
         payload: { provider: 'local', ipAddress },
       });
 
-      return res.status(201).json({ user });
+      return res.status(201).json({ user: sanitizeUser(user) });
     });
 
     return undefined;
@@ -357,7 +421,7 @@ app.post('/auth/login', async (req, res, next) => {
         payload: { provider: 'local', ipAddress },
       });
 
-      return res.json({ user: updatedUser });
+      return res.json({ user: sanitizeUser(updatedUser) });
     });
 
     return undefined;
@@ -418,11 +482,11 @@ app.get('/api/me', (req, res) => {
     return res.json({ user: null });
   }
 
-  return res.json({ user: req.user });
+  return res.json({ user: sanitizeUser(req.user) });
 });
 
 app.get('/api/users', ensureRole(['owner', 'admin']), (req, res) => {
-  res.json({ users: listUsers() });
+  res.json({ users: sanitizeUsers(listUsers()) });
 });
 
 app.patch('/api/users/:id/role', ensureRole(['owner', 'admin']), (req, res) => {
@@ -445,7 +509,7 @@ app.patch('/api/users/:id/role', ensureRole(['owner', 'admin']), (req, res) => {
     payload: { userId, role: requestedRole },
   });
 
-  return res.json({ user: updatedUser });
+  return res.json({ user: sanitizeUser(updatedUser) });
 });
 
 app.get('/api/forum/threads', (req, res) => {
@@ -534,7 +598,7 @@ app.patch('/api/forum/threads/:id/lock', ensureRole(['owner', 'admin', 'moderato
 
 app.get('/api/bootstrap', (req, res) => {
   res.json({
-    currentUser: req.user || null,
+    currentUser: sanitizeUser(req.user) || null,
     loginEnabled: true,
     loginMethods: {
       local: true,
@@ -551,8 +615,37 @@ app.get('/api/bootstrap', (req, res) => {
 });
 
 app.use((error, req, res, next) => {
+  appendErrorLog({
+    type: 'request_error',
+    message: String(error?.message || error),
+    stack: error?.stack || null,
+    request: {
+      method: req.method,
+      path: req.originalUrl,
+      ip: getClientIp(req),
+      userId: req.user?.id || null,
+    },
+  });
   console.error(error);
   res.status(500).json({ error: 'Internal server error' });
+});
+
+process.on('unhandledRejection', (reason) => {
+  appendErrorLog({
+    type: 'unhandled_rejection',
+    message: String(reason?.message || reason),
+    stack: reason?.stack || null,
+  });
+  console.error('Unhandled Rejection:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  appendErrorLog({
+    type: 'uncaught_exception',
+    message: String(error?.message || error),
+    stack: error?.stack || null,
+  });
+  console.error('Uncaught Exception:', error);
 });
 
 app.listen(PORT, () => {

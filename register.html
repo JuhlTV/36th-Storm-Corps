@@ -19,6 +19,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="design-refresh.css" />
 </head>
 <body class="page-auth">
   <div class="noise" aria-hidden="true"></div>
@@ -114,6 +115,7 @@
 
   <div id="toast-root" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
 
+  <script src="api-config.js"></script>
   <script>
     const getSafeRedirectTarget = (fallback = 'forum.html') => {
       const raw = new URLSearchParams(window.location.search).get('redirect') || '';
@@ -131,6 +133,11 @@
     };
 
     const toastRoot = document.getElementById('toast-root');
+
+    const apiFetch = async (route, options = {}) => {
+      return window.StormCorpsApi.apiFetchRaw(route, options);
+    };
+
     const showToast = (message, type = 'info') => {
       if (!toastRoot || !message) return;
       const toast = document.createElement('div');
@@ -166,7 +173,7 @@
 
     (async () => {
       try {
-        const res = await fetch('/api/me', { credentials: 'same-origin' });
+        const res = await apiFetch('/api/me');
         if (res.ok) {
           const data = await res.json();
           if (data.user) {
@@ -193,9 +200,8 @@
       submitBtn.textContent = 'Erstellen…';
 
       try {
-        const res = await fetch('/auth/register', {
+        const res = await apiFetch('/auth/register', {
           method: 'POST',
-          credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, displayName, email, password }),
         });

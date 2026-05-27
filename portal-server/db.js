@@ -1,93 +1,8 @@
 const fs = require('fs');
 const path = require('path');
-const Database = require('better-sqlite3');
 
 const dataDir = path.join(__dirname, 'data');
-const dbPath = path.join(dataDir, 'portal.sqlite');
-
-let database;
-
-const getDatabase = () => {
-  if (!database) {
-    fs.mkdirSync(dataDir, { recursive: true });
-    database = new Database(dbPath);
-    database.pragma('journal_mode = WAL');
-  }
-
-  return database;
-};
-
-const initDb = () => {
-  const db = getDatabase();
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      google_sub TEXT UNIQUE NOT NULL,
-      username TEXT,
-      email TEXT UNIQUE,
-      auth_provider TEXT NOT NULL DEFAULT 'google',
-      password_hash TEXT,
-      display_name TEXT NOT NULL,
-      avatar_url TEXT,
-      role TEXT NOT NULL DEFAULT 'member',
-      first_ip TEXT,
-      last_ip TEXT,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL,
-      last_login_at TEXT
-    );
-
-    CREATE TABLE IF NOT EXISTS forum_threads (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      body TEXT NOT NULL,
-      author_user_id INTEGER NOT NULL,
-      locked INTEGER NOT NULL DEFAULT 0,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL,
-      FOREIGN KEY (author_user_id) REFERENCES users(id)
-    );
-
-    CREATE TABLE IF NOT EXISTS forum_posts (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      thread_id INTEGER NOT NULL,
-      author_user_id INTEGER NOT NULL,
-      body TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      FOREIGN KEY (thread_id) REFERENCES forum_threads(id),
-      FOREIGN KEY (author_user_id) REFERENCES users(id)
-    );
-
-    CREATE TABLE IF NOT EXISTS audit_events (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      actor_user_id INTEGER,
-      event_type TEXT NOT NULL,
-      payload TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      FOREIGN KEY (actor_user_id) REFERENCES users(id)
-    );
-  `);
-
-  const userColumns = db.prepare('PRAGMA table_info(users)').all().map((entry) => entry.name);
-
-  if (!userColumns.includes('username')) {
-    db.exec('ALTER TABLE users ADD COLUMN username TEXT');
-  }
-
-  if (!userColumns.includes('auth_provider')) {
-    db.exec("ALTER TABLE users ADD COLUMN auth_provider TEXT NOT NULL DEFAULT 'google'");
-  }
-
-  if (!userColumns.includes('password_hash')) {
-    db.exec('ALTER TABLE users ADD COLUMN password_hash TEXT');
-  }
-
-  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_unique ON users(username) WHERE username IS NOT NULL');
-  db.exec("UPDATE users SET auth_provider = COALESCE(auth_provider, 'google')");
-
-  return db;
-};
+const storePath = path.join(dataDir, 'portal-data.json');
 
 const nowIso = () => new Date().toISOString();
 
@@ -96,14 +11,76 @@ const normalizeRole = (role) => {
   return allowed.has(role) ? role : 'member';
 };
 
+const createDefaultStore = () => ({
+  counters: {
+    users: 0,
+    threads: 0,
+    posts: 0,
+    auditEvents: 0,
+  },
+  users: [],
+  forumThreads: [],
+  forumPosts: [],
+  auditEvents: [],
+});
+
+const ensureStoreExists = () => {
+  fs.mkdirSync(dataDir, { recursive: true });
+  if (!fs.existsSync(storePath)) {
+    fs.writeFileSync(storePath, JSON.stringify(createDefaultStore(), null, 2));
+  }
+};
+
+const readStore = () => {
+  ensureStoreExists();
+  const raw = fs.readFileSync(storePath, 'utf8');
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') {
+      return createDefaultStore();
+    }
+
+    return {
+      counters: parsed.counters || createDefaultStore().counters,
+      users: Array.isArray(parsed.users) ? parsed.users : [],
+      forumThreads: Array.isArray(parsed.forumThreads) ? parsed.forumThreads : [],
+      forumPosts: Array.isArray(parsed.forumPosts) ? parsed.forumPosts : [],
+      auditEvents: Array.isArray(parsed.auditEvents) ? parsed.auditEvents : [],
+    };
+  } catch {
+    return createDefaultStore();
+  }
+};
+
+const writeStore = (store) => {
+  ensureStoreExists();
+  const tmpPath = `${storePath}.tmp`;
+  fs.writeFileSync(tmpPath, JSON.stringify(store, null, 2));
+  fs.renameSync(tmpPath, storePath);
+};
+
+const withStore = (handler) => {
+  const store = readStore();
+  const result = handler(store);
+  writeStore(store);
+  return result;
+};
+
+const initDb = () => {
+  ensureStoreExists();
+  return { mode: 'file-store', path: storePath };
+};
+
+const getDatabase = () => ({ mode: 'file-store', path: storePath });
+
 const findUserByGoogleSub = (googleSub) => {
-  const db = getDatabase();
-  return db.prepare('SELECT * FROM users WHERE google_sub = ?').get(googleSub);
+  const store = readStore();
+  return store.users.find((entry) => entry.google_sub === googleSub) || null;
 };
 
 const findUserById = (userId) => {
-  const db = getDatabase();
-  return db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+  const store = readStore();
+  return store.users.find((entry) => entry.id === userId) || null;
 };
 
 const findUserByEmail = (email) => {
@@ -111,8 +88,9 @@ const findUserByEmail = (email) => {
     return null;
   }
 
-  const db = getDatabase();
-  return db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const store = readStore();
+  return store.users.find((entry) => entry.email === normalizedEmail) || null;
 };
 
 const findUserByUsername = (username) => {
@@ -120,8 +98,9 @@ const findUserByUsername = (username) => {
     return null;
   }
 
-  const db = getDatabase();
-  return db.prepare('SELECT * FROM users WHERE username = ?').get(String(username).trim().toLowerCase());
+  const normalizedUsername = String(username).trim().toLowerCase();
+  const store = readStore();
+  return store.users.find((entry) => entry.username === normalizedUsername) || null;
 };
 
 const findUserByLogin = (login) => {
@@ -134,216 +113,288 @@ const findUserByLogin = (login) => {
 };
 
 const countUsers = () => {
-  const db = getDatabase();
-  const result = db.prepare('SELECT COUNT(*) as total FROM users').get();
-  return Number(result?.total || 0);
+  const store = readStore();
+  return store.users.length;
 };
 
 const createLocalUser = ({ username, email = null, passwordHash, displayName, ipAddress, defaultRole = 'member' }) => {
-  const db = getDatabase();
-  const normalizedUsername = username ? String(username).trim().toLowerCase() : null;
-  const normalizedEmail = email ? String(email).trim().toLowerCase() : null;
-  const timestamp = nowIso();
-  const localSub = normalizedUsername ? `local:${normalizedUsername}` : `local:${timestamp}:${Math.random().toString(36).slice(2, 10)}`;
+  return withStore((store) => {
+    const normalizedUsername = username ? String(username).trim().toLowerCase() : null;
+    const normalizedEmail = email ? String(email).trim().toLowerCase() : null;
+    const timestamp = nowIso();
 
-  const result = db.prepare(`
-    INSERT INTO users (
-      google_sub, username, email, auth_provider, password_hash,
-      display_name, avatar_url, role, first_ip, last_ip, created_at, updated_at, last_login_at
-    ) VALUES (?, ?, ?, 'local', ?, ?, NULL, ?, ?, ?, ?, ?, ?)
-  `).run(
-    localSub,
-    normalizedUsername,
-    normalizedEmail,
-    passwordHash || null,
-    displayName,
-    normalizeRole(defaultRole),
-    ipAddress,
-    ipAddress,
-    timestamp,
-    timestamp,
-    timestamp,
-  );
+    store.counters.users += 1;
+    const user = {
+      id: store.counters.users,
+      google_sub: normalizedUsername ? `local:${normalizedUsername}` : `local:${timestamp}:${Math.random().toString(36).slice(2, 10)}`,
+      username: normalizedUsername,
+      email: normalizedEmail,
+      auth_provider: 'local',
+      password_hash: passwordHash || null,
+      display_name: displayName,
+      avatar_url: null,
+      role: normalizeRole(defaultRole),
+      first_ip: ipAddress || null,
+      last_ip: ipAddress || null,
+      created_at: timestamp,
+      updated_at: timestamp,
+      last_login_at: timestamp,
+    };
 
-  return db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
+    store.users.push(user);
+    return user;
+  });
 };
 
 const upsertUserFromGoogle = ({ profile, ipAddress, defaultRole = 'member' }) => {
-  const db = getDatabase();
-  const googleSub = String(profile.id);
-  const email = profile.emails?.[0]?.value?.toLowerCase?.() ?? null;
-  const displayName = profile.displayName || email || 'Unbekannt';
-  const avatarUrl = profile.photos?.[0]?.value ?? null;
-  const timestamp = nowIso();
+  return withStore((store) => {
+    const googleSub = String(profile.id);
+    const email = profile.emails?.[0]?.value?.toLowerCase?.() ?? null;
+    const displayName = profile.displayName || email || 'Unbekannt';
+    const avatarUrl = profile.photos?.[0]?.value ?? null;
+    const timestamp = nowIso();
 
-  let existing = findUserByGoogleSub(googleSub) || findUserByEmail(email);
+    let existing = store.users.find((entry) => entry.google_sub === googleSub)
+      || (email ? store.users.find((entry) => entry.email === email) : null);
 
-  if (!existing) {
-    const insert = db.prepare(`
-      INSERT INTO users (
-        google_sub, username, email, auth_provider, password_hash, display_name, avatar_url, role,
-        first_ip, last_ip, created_at, updated_at, last_login_at
-      ) VALUES (?, NULL, ?, 'google', NULL, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+    if (!existing) {
+      store.counters.users += 1;
+      const user = {
+        id: store.counters.users,
+        google_sub: googleSub,
+        username: null,
+        email,
+        auth_provider: 'google',
+        password_hash: null,
+        display_name: displayName,
+        avatar_url: avatarUrl,
+        role: normalizeRole(defaultRole),
+        first_ip: ipAddress || null,
+        last_ip: ipAddress || null,
+        created_at: timestamp,
+        updated_at: timestamp,
+        last_login_at: timestamp,
+      };
 
-    const result = insert.run(
-      googleSub,
-      email,
-      displayName,
-      avatarUrl,
-      normalizeRole(defaultRole),
-      ipAddress,
-      ipAddress,
-      timestamp,
-      timestamp,
-      timestamp,
-    );
+      store.users.push(user);
+      return user;
+    }
 
-    existing = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
+    existing.email = email || existing.email;
+    existing.auth_provider = 'google';
+    existing.display_name = displayName;
+    existing.avatar_url = avatarUrl;
+    existing.role = existing.role === 'owner' ? 'owner' : normalizeRole(defaultRole);
+    existing.first_ip = existing.first_ip || ipAddress || null;
+    existing.last_ip = ipAddress || existing.last_ip || null;
+    existing.updated_at = timestamp;
+    existing.last_login_at = timestamp;
+
     return existing;
-  }
-
-  const nextRole = existing.role === 'owner' ? 'owner' : normalizeRole(defaultRole);
-  const firstIp = existing.first_ip || ipAddress;
-
-  db.prepare(`
-    UPDATE users
-    SET email = ?, auth_provider = 'google', display_name = ?, avatar_url = ?, role = ?, first_ip = ?, last_ip = ?, updated_at = ?, last_login_at = ?
-    WHERE id = ?
-  `).run(
-    email || existing.email,
-    displayName,
-    avatarUrl,
-    nextRole,
-    firstIp,
-    ipAddress,
-    timestamp,
-    timestamp,
-    existing.id,
-  );
-
-  return db.prepare('SELECT * FROM users WHERE id = ?').get(existing.id);
+  });
 };
 
 const touchUserLogin = ({ userId, ipAddress }) => {
-  const db = getDatabase();
-  const timestamp = nowIso();
-  db.prepare(`
-    UPDATE users
-    SET last_ip = ?, updated_at = ?, last_login_at = ?
-    WHERE id = ?
-  `).run(ipAddress, timestamp, timestamp, userId);
+  return withStore((store) => {
+    const user = store.users.find((entry) => entry.id === userId);
+    if (!user) {
+      return null;
+    }
 
-  return db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+    const timestamp = nowIso();
+    user.last_ip = ipAddress || user.last_ip || null;
+    user.updated_at = timestamp;
+    user.last_login_at = timestamp;
+    return user;
+  });
 };
 
 const clearLocalCredentials = ({ userId }) => {
-  const db = getDatabase();
-  const timestamp = nowIso();
-  db.prepare(`
-    UPDATE users
-    SET username = NULL, email = NULL, password_hash = NULL, updated_at = ?
-    WHERE id = ? AND auth_provider = 'local'
-  `).run(timestamp, userId);
+  return withStore((store) => {
+    const user = store.users.find((entry) => entry.id === userId);
+    if (!user || user.auth_provider !== 'local') {
+      return user || null;
+    }
 
-  return db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+    user.username = null;
+    user.email = null;
+    user.password_hash = null;
+    user.updated_at = nowIso();
+    return user;
+  });
 };
 
 const deleteUserById = ({ userId }) => {
-  const db = getDatabase();
-  db.prepare('DELETE FROM users WHERE id = ?').run(userId);
+  withStore((store) => {
+    store.users = store.users.filter((entry) => entry.id !== userId);
+    return null;
+  });
 };
 
 const setUserRole = ({ userId, role }) => {
-  const db = getDatabase();
-  const timestamp = nowIso();
-  db.prepare('UPDATE users SET role = ?, updated_at = ? WHERE id = ?').run(normalizeRole(role), timestamp, userId);
-  return db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+  return withStore((store) => {
+    const user = store.users.find((entry) => entry.id === userId);
+    if (!user) {
+      return null;
+    }
+
+    user.role = normalizeRole(role);
+    user.updated_at = nowIso();
+    return user;
+  });
 };
 
 const listUsers = () => {
-  const db = getDatabase();
-  return db.prepare('SELECT id, username, email, auth_provider, display_name, avatar_url, role, first_ip, last_ip, created_at, updated_at, last_login_at FROM users ORDER BY created_at DESC').all();
+  const store = readStore();
+  return [...store.users].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
 };
 
 const createThread = ({ title, body, authorUserId }) => {
-  const db = getDatabase();
-  const timestamp = nowIso();
-  const result = db.prepare(`
-    INSERT INTO forum_threads (title, body, author_user_id, locked, created_at, updated_at)
-    VALUES (?, ?, ?, 0, ?, ?)
-  `).run(title, body, authorUserId, timestamp, timestamp);
+  return withStore((store) => {
+    const timestamp = nowIso();
+    store.counters.threads += 1;
+    const thread = {
+      id: store.counters.threads,
+      title,
+      body,
+      author_user_id: authorUserId,
+      locked: 0,
+      created_at: timestamp,
+      updated_at: timestamp,
+    };
 
-  return db.prepare('SELECT * FROM forum_threads WHERE id = ?').get(result.lastInsertRowid);
+    store.forumThreads.push(thread);
+    return thread;
+  });
 };
 
 const listThreads = () => {
-  const db = getDatabase();
-  return db.prepare(`
-    SELECT
-      t.id, t.title, t.body, t.locked, t.created_at, t.updated_at,
-      u.display_name AS author_name,
-      u.role AS author_role,
-      (SELECT COUNT(*) FROM forum_posts p WHERE p.thread_id = t.id) AS reply_count
-    FROM forum_threads t
-    JOIN users u ON u.id = t.author_user_id
-    ORDER BY t.updated_at DESC, t.created_at DESC
-  `).all();
+  const store = readStore();
+
+  const threads = store.forumThreads.map((thread) => {
+    const author = store.users.find((user) => user.id === thread.author_user_id);
+    const replyCount = store.forumPosts.filter((post) => post.thread_id === thread.id).length;
+
+    return {
+      id: thread.id,
+      title: thread.title,
+      body: thread.body,
+      locked: thread.locked,
+      created_at: thread.created_at,
+      updated_at: thread.updated_at,
+      author_name: author?.display_name || 'Unbekannt',
+      author_role: author?.role || 'member',
+      reply_count: replyCount,
+    };
+  });
+
+  return threads.sort((a, b) => {
+    const byUpdate = String(b.updated_at).localeCompare(String(a.updated_at));
+    if (byUpdate !== 0) {
+      return byUpdate;
+    }
+    return String(b.created_at).localeCompare(String(a.created_at));
+  });
 };
 
 const getThreadById = (threadId) => {
-  const db = getDatabase();
-  return db.prepare(`
-    SELECT
-      t.id, t.title, t.body, t.locked, t.created_at, t.updated_at,
-      u.display_name AS author_name,
-      u.role AS author_role
-    FROM forum_threads t
-    JOIN users u ON u.id = t.author_user_id
-    WHERE t.id = ?
-  `).get(threadId);
+  const store = readStore();
+  const thread = store.forumThreads.find((entry) => entry.id === threadId);
+  if (!thread) {
+    return null;
+  }
+
+  const author = store.users.find((user) => user.id === thread.author_user_id);
+  return {
+    id: thread.id,
+    title: thread.title,
+    body: thread.body,
+    locked: thread.locked,
+    created_at: thread.created_at,
+    updated_at: thread.updated_at,
+    author_name: author?.display_name || 'Unbekannt',
+    author_role: author?.role || 'member',
+  };
 };
 
 const listPostsForThread = (threadId) => {
-  const db = getDatabase();
-  return db.prepare(`
-    SELECT
-      p.id, p.body, p.created_at,
-      u.display_name AS author_name,
-      u.role AS author_role,
-      u.avatar_url
-    FROM forum_posts p
-    JOIN users u ON u.id = p.author_user_id
-    WHERE p.thread_id = ?
-    ORDER BY p.created_at ASC
-  `).all(threadId);
+  const store = readStore();
+  return store.forumPosts
+    .filter((post) => post.thread_id === threadId)
+    .sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))
+    .map((post) => {
+      const author = store.users.find((user) => user.id === post.author_user_id);
+      return {
+        id: post.id,
+        body: post.body,
+        created_at: post.created_at,
+        author_name: author?.display_name || 'Unbekannt',
+        author_role: author?.role || 'member',
+        avatar_url: author?.avatar_url || null,
+      };
+    });
 };
 
 const createPost = ({ threadId, authorUserId, body }) => {
-  const db = getDatabase();
-  const timestamp = nowIso();
-  const result = db.prepare(`
-    INSERT INTO forum_posts (thread_id, author_user_id, body, created_at)
-    VALUES (?, ?, ?, ?)
-  `).run(threadId, authorUserId, body, timestamp);
+  return withStore((store) => {
+    const timestamp = nowIso();
 
-  db.prepare('UPDATE forum_threads SET updated_at = ? WHERE id = ?').run(timestamp, threadId);
-  return db.prepare('SELECT * FROM forum_posts WHERE id = ?').get(result.lastInsertRowid);
+    store.counters.posts += 1;
+    const post = {
+      id: store.counters.posts,
+      thread_id: threadId,
+      author_user_id: authorUserId,
+      body,
+      created_at: timestamp,
+    };
+
+    store.forumPosts.push(post);
+
+    const thread = store.forumThreads.find((entry) => entry.id === threadId);
+    if (thread) {
+      thread.updated_at = timestamp;
+    }
+
+    return post;
+  });
 };
 
 const setThreadLocked = ({ threadId, locked }) => {
-  const db = getDatabase();
-  const timestamp = nowIso();
-  db.prepare('UPDATE forum_threads SET locked = ?, updated_at = ? WHERE id = ?').run(locked ? 1 : 0, timestamp, threadId);
-  return getThreadById(threadId);
+  return withStore((store) => {
+    const thread = store.forumThreads.find((entry) => entry.id === threadId);
+    if (!thread) {
+      return null;
+    }
+
+    thread.locked = locked ? 1 : 0;
+    thread.updated_at = nowIso();
+
+    const author = store.users.find((user) => user.id === thread.author_user_id);
+    return {
+      id: thread.id,
+      title: thread.title,
+      body: thread.body,
+      locked: thread.locked,
+      created_at: thread.created_at,
+      updated_at: thread.updated_at,
+      author_name: author?.display_name || 'Unbekannt',
+      author_role: author?.role || 'member',
+    };
+  });
 };
 
 const recordAuditEvent = ({ actorUserId = null, eventType, payload }) => {
-  const db = getDatabase();
-  db.prepare(`
-    INSERT INTO audit_events (actor_user_id, event_type, payload, created_at)
-    VALUES (?, ?, ?, ?)
-  `).run(actorUserId, eventType, JSON.stringify(payload ?? {}), nowIso());
+  withStore((store) => {
+    store.counters.auditEvents += 1;
+    store.auditEvents.push({
+      id: store.counters.auditEvents,
+      actor_user_id: actorUserId,
+      event_type: eventType,
+      payload: JSON.stringify(payload ?? {}),
+      created_at: nowIso(),
+    });
+    return null;
+  });
 };
 
 module.exports = {

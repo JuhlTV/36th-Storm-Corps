@@ -66,8 +66,19 @@ const readStore = () => {
     return { accounts: [] };
   }
 
-  const wrapped = JSON.parse(fs.readFileSync(authFilePath, 'utf8'));
-  return decryptPayload(wrapped);
+  try {
+    const wrapped = JSON.parse(fs.readFileSync(authFilePath, 'utf8'));
+    return decryptPayload(wrapped);
+  } catch (error) {
+    const backupPath = `${authFilePath}.invalid-${Date.now()}`;
+    try {
+      fs.copyFileSync(authFilePath, backupPath);
+    } catch {
+      // Ignore backup failures and continue with clean recovery store.
+    }
+
+    return { accounts: [] };
+  }
 };
 
 const writeStore = (store) => {
