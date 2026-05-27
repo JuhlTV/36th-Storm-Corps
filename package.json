@@ -1,0 +1,8 @@
+{
+  "name": "36th-storm-corps-site",
+  "private": true,
+  "scripts": {
+    "postinstall": "npm install --prefix portal-server",
+    "start": "node portal-server/server.js"
+  }
+}
