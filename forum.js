@@ -176,7 +176,7 @@ const renderUsers = (users) => {
     <div class="forum-user-card" data-user-id="${user.id}">
       <div>
         <strong>${escapeHtml(user.display_name)}</strong>
-        <span>${escapeHtml(user.email || 'keine E-Mail')} | ${escapeHtml(user.role)}</span>
+        <span>${escapeHtml(user.role)}</span>
       </div>
       <select data-role-select="${user.id}">
         <option value="member" ${user.role === 'member' ? 'selected' : ''}>member</option>
