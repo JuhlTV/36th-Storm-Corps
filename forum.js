@@ -15,11 +15,19 @@ const forumReplyThread = document.getElementById('forum-reply-thread');
 const forumReplyBody = document.getElementById('forum-reply-body');
 const forumReplyFormNote = document.getElementById('forum-reply-form-note');
 const forumAdminSection = document.getElementById('forum-admin-section');
+const forumRoleAdminPanel = document.getElementById('forum-role-admin-panel');
+const forumRoleStatusPanel = document.getElementById('forum-role-status-panel');
 const forumUserList = document.getElementById('forum-user-list');
 const forumAdminNote = document.getElementById('forum-admin-note');
 const forumAdminRefresh = document.getElementById('forum-admin-refresh');
 const forumAuditRefresh = document.getElementById('forum-audit-refresh');
 const forumAuditList = document.getElementById('forum-audit-list');
+const forumMedalAdminPanel = document.getElementById('forum-medal-admin-panel');
+const forumMedalUserSelect = document.getElementById('forum-medal-user-select');
+const forumMedalSelect = document.getElementById('forum-medal-select');
+const forumMedalAwardBtn = document.getElementById('forum-medal-award-btn');
+const forumMedalRevokeBtn = document.getElementById('forum-medal-revoke-btn');
+const forumMedalNote = document.getElementById('forum-medal-note');
 const forumProfileForm = document.getElementById('forum-profile-form');
 const forumProfileDisplayName = document.getElementById('forum-profile-display-name');
 const forumProfileCallsign = document.getElementById('forum-profile-callsign');
@@ -135,6 +143,36 @@ const currentForumLocation = () => {
 const canManageMedals = () => Boolean(currentUser && ['owner', 'admin', 'moderator'].includes(currentUser.role));
 const canManageUsers = () => Boolean(currentUser && ['owner', 'admin'].includes(currentUser.role));
 
+const renderMedalAdminControls = () => {
+  if (!forumMedalAdminPanel || !forumMedalSelect || !forumMedalUserSelect) {
+    return;
+  }
+
+  if (!canManageMedals()) {
+    forumMedalAdminPanel.hidden = true;
+    return;
+  }
+
+  forumMedalAdminPanel.hidden = false;
+
+  const userOptions = ['<option value="">Nutzer waehlen...</option>'];
+  currentProfiles.forEach((profile) => {
+    const roleSuffix = profile.role ? ` (${profile.role})` : '';
+    userOptions.push(`<option value="${profile.id}">${escapeHtml(profile.display_name)}${escapeHtml(roleSuffix)}</option>`);
+  });
+  forumMedalUserSelect.innerHTML = userOptions.join('');
+
+  const medalOptions = ['<option value="">Medaillie waehlen...</option>'];
+  unitMedals.forEach((medal) => {
+    medalOptions.push(`<option value="${escapeHtml(medal.id)}">${escapeHtml(medal.name)}</option>`);
+  });
+  forumMedalSelect.innerHTML = medalOptions.join('');
+
+  if (forumMedalNote) {
+    forumMedalNote.textContent = 'Bereit.';
+  }
+};
+
 const redirectToLogin = () => {
   const target = encodeURIComponent(currentForumLocation());
   window.location.replace(`login.html?redirect=${target}`);
@@ -215,6 +253,13 @@ const renderAuthState = async () => {
   if (forumAdminSection) {
     forumAdminSection.hidden = !canOpenAdminPanel;
   }
+
+  if (forumRoleAdminPanel) {
+    forumRoleAdminPanel.hidden = !canManageUsers();
+  }
+  if (forumRoleStatusPanel) {
+    forumRoleStatusPanel.hidden = !canManageUsers();
+  }
 };
 
 const renderMedalAudit = (entries) => {
@@ -263,28 +308,6 @@ const renderProfileView = (profile) => {
     ? `<div class="forum-medal-list">${medalEntries.map((medal) => `<span class="forum-medal-chip forum-medal-chip--${escapeHtml(medal.tier || 'bronze')}" title="${escapeHtml(medal.description || '')}">${escapeHtml(medal.name)}</span>`).join('')}</div>`
     : '<p class="forum-empty">Keine Medaillen vergeben.</p>';
 
-  const availableOptions = unitMedals
-    .map((medal) => `<option value="${escapeHtml(medal.id)}">${escapeHtml(medal.name)}</option>`)
-    .join('');
-
-  const medalManagerMarkup = canManageMedals()
-    ? `
-      <div class="forum-medal-manager">
-        <label>
-          <span>Medaillie vergeben (Einheit)</span>
-          <select data-medal-select="${profile.id}">
-            <option value="">Medaillie waehlen...</option>
-            ${availableOptions}
-          </select>
-        </label>
-        <div class="forum-profile-actions">
-          <button type="button" class="btn btn-ghost" data-medal-award="${profile.id}">Vergabe</button>
-          <button type="button" class="btn btn-ghost" data-medal-revoke="${profile.id}">Entzug</button>
-        </div>
-      </div>
-    `
-    : '';
-
   forumProfileView.innerHTML = `
     <article class="forum-thread-view forum-profile-card">
       <header class="forum-thread-view-head forum-profile-head">
@@ -312,7 +335,6 @@ const renderProfileView = (profile) => {
         <h4>Einheits-Medaillien</h4>
         ${medalListMarkup}
       </section>
-      ${medalManagerMarkup}
     </article>
   `;
 
@@ -340,58 +362,6 @@ const renderProfileView = (profile) => {
     });
   });
 
-  forumProfileView.querySelectorAll('[data-medal-award]').forEach((button) => {
-    button.addEventListener('click', async () => {
-      const targetUserId = Number(button.dataset.medalAward);
-      const select = forumProfileView.querySelector(`[data-medal-select="${targetUserId}"]`);
-      const medalId = String(select?.value || '').trim();
-
-      if (!medalId) {
-        showForumToast('Bitte zuerst eine Medaillie waehlen.', 'error');
-        return;
-      }
-
-      try {
-        setBusyState(button, true, 'Vergabe...');
-        const data = await apiFetch(`/api/profiles/${targetUserId}/medals`, {
-          method: 'POST',
-          body: JSON.stringify({ medalId }),
-        });
-        renderProfileView(data.profile);
-        await loadProfiles();
-      } catch (error) {
-        showForumToast(error.message, 'error');
-      } finally {
-        setBusyState(button, false);
-      }
-    });
-  });
-
-  forumProfileView.querySelectorAll('[data-medal-revoke]').forEach((button) => {
-    button.addEventListener('click', async () => {
-      const targetUserId = Number(button.dataset.medalRevoke);
-      const select = forumProfileView.querySelector(`[data-medal-select="${targetUserId}"]`);
-      const medalId = String(select?.value || '').trim();
-
-      if (!medalId) {
-        showForumToast('Bitte zuerst eine Medaillie waehlen.', 'error');
-        return;
-      }
-
-      try {
-        setBusyState(button, true, 'Entzug...');
-        const data = await apiFetch(`/api/profiles/${targetUserId}/medals/${encodeURIComponent(medalId)}`, {
-          method: 'DELETE',
-        });
-        renderProfileView(data.profile);
-        await loadProfiles();
-      } catch (error) {
-        showForumToast(error.message, 'error');
-      } finally {
-        setBusyState(button, false);
-      }
-    });
-  });
 };
 
 const renderContacts = (contacts) => {
@@ -652,6 +622,7 @@ const loadProfiles = async () => {
   const data = await apiFetch('/api/profiles');
   currentProfiles = data.profiles || [];
   renderProfileOptions(currentProfiles);
+  renderMedalAdminControls();
 
   if (!selectedProfileId && currentUser?.id) {
     selectedProfileId = currentUser.id;
@@ -751,6 +722,87 @@ forumAuditRefresh?.addEventListener('click', async () => {
     showForumToast(error.message, 'error');
   } finally {
     setBusyState(forumAuditRefresh, false);
+  }
+});
+
+forumMedalAwardBtn?.addEventListener('click', async () => {
+  const targetUserId = Number(forumMedalUserSelect?.value);
+  const medalId = String(forumMedalSelect?.value || '').trim();
+
+  if (!Number.isInteger(targetUserId) || targetUserId <= 0) {
+    showForumToast('Bitte zuerst einen Nutzer waehlen.', 'error');
+    return;
+  }
+  if (!medalId) {
+    showForumToast('Bitte zuerst eine Medaillie waehlen.', 'error');
+    return;
+  }
+
+  try {
+    setBusyState(forumMedalAwardBtn, true, 'Vergabe...');
+    const data = await apiFetch(`/api/profiles/${targetUserId}/medals`, {
+      method: 'POST',
+      body: JSON.stringify({ medalId }),
+    });
+
+    if (forumMedalNote) {
+      forumMedalNote.textContent = `Medaillie vergeben: ${medalId}`;
+    }
+
+    if (selectedProfileId === targetUserId) {
+      renderProfileView(data.profile);
+    }
+
+    await loadProfiles();
+    await loadMedalAudit();
+    showForumToast('Medaillie vergeben', 'success');
+  } catch (error) {
+    if (forumMedalNote) {
+      forumMedalNote.textContent = error.message;
+    }
+    showForumToast(error.message, 'error');
+  } finally {
+    setBusyState(forumMedalAwardBtn, false);
+  }
+});
+
+forumMedalRevokeBtn?.addEventListener('click', async () => {
+  const targetUserId = Number(forumMedalUserSelect?.value);
+  const medalId = String(forumMedalSelect?.value || '').trim();
+
+  if (!Number.isInteger(targetUserId) || targetUserId <= 0) {
+    showForumToast('Bitte zuerst einen Nutzer waehlen.', 'error');
+    return;
+  }
+  if (!medalId) {
+    showForumToast('Bitte zuerst eine Medaillie waehlen.', 'error');
+    return;
+  }
+
+  try {
+    setBusyState(forumMedalRevokeBtn, true, 'Entzug...');
+    const data = await apiFetch(`/api/profiles/${targetUserId}/medals/${encodeURIComponent(medalId)}`, {
+      method: 'DELETE',
+    });
+
+    if (forumMedalNote) {
+      forumMedalNote.textContent = `Medaillie entzogen: ${medalId}`;
+    }
+
+    if (selectedProfileId === targetUserId) {
+      renderProfileView(data.profile);
+    }
+
+    await loadProfiles();
+    await loadMedalAudit();
+    showForumToast('Medaillie entzogen', 'success');
+  } catch (error) {
+    if (forumMedalNote) {
+      forumMedalNote.textContent = error.message;
+    }
+    showForumToast(error.message, 'error');
+  } finally {
+    setBusyState(forumMedalRevokeBtn, false);
   }
 });
 

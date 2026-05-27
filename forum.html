@@ -205,13 +205,13 @@
 
     <section class="forum-board section-reveal" id="forum-admin-section" hidden>
       <div class="container forum-grid forum-admin-grid">
-        <article class="forum-panel forum-admin-panel forum-admin-focus">
+        <article class="forum-panel forum-admin-panel forum-admin-focus" id="forum-role-admin-panel">
           <h2>Rollenverwaltung</h2>
           <p class="forum-note">Nur Owner, Admins und Moderatoren mit Freigabe sehen diesen Bereich. Rollen werden direkt im Portal gesetzt und im Backend gespeichert.</p>
           <div id="forum-user-list" class="forum-user-list"></div>
         </article>
 
-        <article class="forum-panel forum-admin-panel">
+        <article class="forum-panel forum-admin-panel" id="forum-role-status-panel">
           <h2>Rollenstatus</h2>
           <p class="forum-note" id="forum-admin-note">Lade...</p>
           <div class="forum-admin-summary">
@@ -222,6 +222,30 @@
           <div class="forum-admin-actions">
             <button class="btn btn-ghost" type="button" id="forum-admin-refresh">Nutzer aktualisieren</button>
           </div>
+        </article>
+
+        <article class="forum-panel forum-admin-panel" id="forum-medal-admin-panel">
+          <h2>Medaillenverwaltung</h2>
+          <p class="forum-note">Einheits-Medaillen gezielt vergeben oder entziehen. Nur mit Rollenrechten.</p>
+          <div class="forum-medal-manager">
+            <label>
+              <span>Nutzer</span>
+              <select id="forum-medal-user-select">
+                <option value="">Nutzer waehlen...</option>
+              </select>
+            </label>
+            <label>
+              <span>Medaillie</span>
+              <select id="forum-medal-select">
+                <option value="">Medaillie waehlen...</option>
+              </select>
+            </label>
+            <div class="forum-profile-actions">
+              <button class="btn btn-ghost" type="button" id="forum-medal-award-btn">Vergabe</button>
+              <button class="btn btn-ghost" type="button" id="forum-medal-revoke-btn">Entzug</button>
+            </div>
+          </div>
+          <p class="forum-note" id="forum-medal-note">Bereit.</p>
         </article>
 
         <article class="forum-panel forum-admin-panel">

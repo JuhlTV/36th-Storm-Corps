@@ -3,14 +3,9 @@ const profileSubtitle = document.getElementById('profile-subtitle');
 const profileCard = document.getElementById('profile-card');
 const profileStats = document.getElementById('profile-stats');
 const profileFollowBtn = document.getElementById('profile-follow-btn');
-const profileMedalManager = document.getElementById('profile-medal-manager');
-const profileMedalSelect = document.getElementById('profile-medal-select');
-const profileMedalAwardBtn = document.getElementById('profile-medal-award-btn');
-const profileMedalRevokeBtn = document.getElementById('profile-medal-revoke-btn');
 
 let currentUser = null;
 let viewedProfile = null;
-let unitMedals = [];
 
 const escapeHtml = (value) => String(value)
   .replaceAll('&', '&amp;')
@@ -71,8 +66,6 @@ const getProfileIdFromPath = () => {
   return Number.isInteger(profileId) && profileId > 0 ? profileId : null;
 };
 
-const canManageMedals = () => Boolean(currentUser && ['owner', 'admin', 'moderator'].includes(currentUser.role));
-
 const renderProfile = (profile) => {
   const avatar = profile.avatar_url
     ? `<img src="${escapeHtml(profile.avatar_url)}" alt="Avatar von ${escapeHtml(profile.display_name)}" class="forum-profile-avatar" loading="lazy" />`
@@ -110,29 +103,6 @@ const renderProfile = (profile) => {
   `;
 };
 
-const renderMedalManager = () => {
-  if (!profileMedalManager || !profileMedalSelect) {
-    return;
-  }
-
-  if (!viewedProfile || !canManageMedals()) {
-    profileMedalManager.hidden = true;
-    return;
-  }
-
-  profileMedalManager.hidden = false;
-  const options = ['<option value="">Medaillie waehlen...</option>'];
-  unitMedals.forEach((medal) => {
-    options.push(`<option value="${escapeHtml(medal.id)}">${escapeHtml(medal.name)}</option>`);
-  });
-  profileMedalSelect.innerHTML = options.join('');
-};
-
-const loadUnitMedals = async () => {
-  const data = await apiFetch('/api/medals');
-  unitMedals = Array.isArray(data.medals) ? data.medals : [];
-};
-
 const renderFollowButton = () => {
   if (!currentUser || !viewedProfile || currentUser.id === viewedProfile.id) {
     profileFollowBtn.hidden = true;
@@ -142,59 +112,6 @@ const renderFollowButton = () => {
   profileFollowBtn.hidden = false;
   profileFollowBtn.textContent = viewedProfile.is_following ? 'Entfolgen' : 'Folgen';
 };
-
-profileMedalAwardBtn?.addEventListener('click', async () => {
-  if (!viewedProfile || !profileMedalSelect) {
-    return;
-  }
-
-  const medalId = String(profileMedalSelect.value || '').trim();
-  if (!medalId) {
-    profileSubtitle.textContent = 'Bitte zuerst eine Medaillie waehlen.';
-    return;
-  }
-
-  profileMedalAwardBtn.disabled = true;
-  try {
-    const data = await apiFetch(`/api/profiles/${viewedProfile.id}/medals`, {
-      method: 'POST',
-      body: JSON.stringify({ medalId }),
-    });
-    viewedProfile = data.profile;
-    renderProfile(viewedProfile);
-    renderMedalManager();
-  } catch (error) {
-    profileSubtitle.textContent = error.message;
-  } finally {
-    profileMedalAwardBtn.disabled = false;
-  }
-});
-
-profileMedalRevokeBtn?.addEventListener('click', async () => {
-  if (!viewedProfile || !profileMedalSelect) {
-    return;
-  }
-
-  const medalId = String(profileMedalSelect.value || '').trim();
-  if (!medalId) {
-    profileSubtitle.textContent = 'Bitte zuerst eine Medaillie waehlen.';
-    return;
-  }
-
-  profileMedalRevokeBtn.disabled = true;
-  try {
-    const data = await apiFetch(`/api/profiles/${viewedProfile.id}/medals/${encodeURIComponent(medalId)}`, {
-      method: 'DELETE',
-    });
-    viewedProfile = data.profile;
-    renderProfile(viewedProfile);
-    renderMedalManager();
-  } catch (error) {
-    profileSubtitle.textContent = error.message;
-  } finally {
-    profileMedalRevokeBtn.disabled = false;
-  }
-});
 
 profileFollowBtn?.addEventListener('click', async () => {
   if (!viewedProfile) {
@@ -235,15 +152,12 @@ profileFollowBtn?.addEventListener('click', async () => {
       return;
     }
 
-    await loadUnitMedals();
-
     const data = await apiFetch(`/api/profiles/${profileId}`);
     viewedProfile = data.profile;
     profileTitle.textContent = viewedProfile.display_name;
     profileSubtitle.textContent = `Profil-ID ${viewedProfile.id}`;
     renderProfile(viewedProfile);
     renderFollowButton();
-    renderMedalManager();
   } catch (error) {
     profileSubtitle.textContent = error.message;
     profileCard.innerHTML = `<p class="forum-empty">${escapeHtml(error.message)}</p>`;
