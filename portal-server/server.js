@@ -306,6 +306,10 @@ app.use('/media/avatars', express.static(avatarDir, {
   immutable: isProduction,
 }));
 
+app.get('/profile', ensureAuth, (req, res) => {
+  return res.redirect(`/profile/${req.user.id}`);
+});
+
 app.get('/profile/:id', (req, res) => {
   res.sendFile(path.join(STATIC_ROOT, 'profile.html'));
 });

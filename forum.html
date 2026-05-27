@@ -35,6 +35,7 @@
         <a href="index.html">Hauptseite</a>
         <a href="operations-hub.html">Operations-Hub</a>
         <a href="lore-codex.html">Lore-Codex</a>
+        <a href="/profile">Profil</a>
         <a href="admin-console.html">Admin-Konsole</a>
         <a href="login.html?redirect=forum.html" class="btn btn-ghost nav-login-btn">Login</a>
       </nav>
@@ -145,121 +146,6 @@
       </div>
     </section>
 
-    <section class="forum-board section-reveal" id="forum-profile-section">
-      <div class="container forum-grid">
-        <article class="forum-panel">
-          <h2>Mein Profil</h2>
-          <p class="forum-panel-subtitle">Passe deinen Anzeigenamen, Callsign, Bio und Profilbild an.</p>
-          <form id="forum-profile-form" class="forum-form">
-            <label>
-              <span>Anzeigename</span>
-              <input id="forum-profile-display-name" type="text" maxlength="80" placeholder="Dein Anzeigename" />
-            </label>
-            <label>
-              <span>Callsign</span>
-              <input id="forum-profile-callsign" type="text" maxlength="40" placeholder="z. B. Viper" />
-            </label>
-            <label>
-              <span>Profilbild URL</span>
-              <input id="forum-profile-avatar" type="url" maxlength="500" placeholder="https://..." />
-            </label>
-            <label>
-              <span>Profilbild Datei</span>
-              <input id="forum-profile-avatar-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
-            </label>
-            <button class="btn btn-ghost" type="button" id="forum-profile-avatar-upload">Datei hochladen</button>
-            <label>
-              <span>Bio</span>
-              <textarea id="forum-profile-bio" rows="5" maxlength="400" placeholder="Kurzprofil, Spezialisierung, Squad-Rolle..."></textarea>
-            </label>
-            <button class="btn btn-primary" type="submit" id="forum-profile-save">Profil speichern</button>
-            <p class="forum-note" id="forum-profile-note">Profil noch nicht geladen.</p>
-          </form>
-
-          <div class="forum-contacts" id="forum-contacts-panel">
-            <div class="forum-contacts-head">
-              <h3>Meine Kontakte</h3>
-              <button class="btn btn-ghost" type="button" id="forum-contacts-refresh">Aktualisieren</button>
-            </div>
-            <div id="forum-contacts-list" class="forum-contacts-list">
-              <p class="forum-empty">Keine Kontakte vorhanden.</p>
-            </div>
-          </div>
-        </article>
-
-        <article class="forum-panel">
-          <h2>Profil ansehen</h2>
-          <p class="forum-panel-subtitle">Waehle ein Profil aus der Liste oder klicke einen Autor im Threadverlauf.</p>
-          <label class="forum-form">
-            <span>Profil auswaehlen</span>
-            <select id="forum-profile-select">
-              <option value="">Profil waehlen...</option>
-            </select>
-          </label>
-          <div id="forum-profile-view" class="forum-thread-detail">
-            <p class="forum-empty">Noch kein Profil ausgewaehlt.</p>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <section class="forum-board section-reveal" id="forum-admin-section" hidden>
-      <div class="container forum-grid forum-admin-grid">
-        <article class="forum-panel forum-admin-panel forum-admin-focus" id="forum-role-admin-panel">
-          <h2>Rollenverwaltung</h2>
-          <p class="forum-note">Nur Owner, Admins und Moderatoren mit Freigabe sehen diesen Bereich. Rollen werden direkt im Portal gesetzt und im Backend gespeichert.</p>
-          <div id="forum-user-list" class="forum-user-list"></div>
-        </article>
-
-        <article class="forum-panel forum-admin-panel" id="forum-role-status-panel">
-          <h2>Rollenstatus</h2>
-          <p class="forum-note" id="forum-admin-note">Lade...</p>
-          <div class="forum-admin-summary">
-            <span class="forum-pill">Schnellzugriff</span>
-            <span class="forum-pill">Live-Rollen</span>
-            <span class="forum-pill">Audit-ready</span>
-          </div>
-          <div class="forum-admin-actions">
-            <button class="btn btn-ghost" type="button" id="forum-admin-refresh">Nutzer aktualisieren</button>
-          </div>
-        </article>
-
-        <article class="forum-panel forum-admin-panel" id="forum-medal-admin-panel">
-          <h2>Medaillenverwaltung</h2>
-          <p class="forum-note">Einheits-Medaillen gezielt vergeben oder entziehen. Nur mit Rollenrechten.</p>
-          <div class="forum-medal-manager">
-            <label>
-              <span>Nutzer</span>
-              <select id="forum-medal-user-select">
-                <option value="">Nutzer waehlen...</option>
-              </select>
-            </label>
-            <label>
-              <span>Medaillie</span>
-              <select id="forum-medal-select">
-                <option value="">Medaillie waehlen...</option>
-              </select>
-            </label>
-            <div class="forum-profile-actions">
-              <button class="btn btn-ghost" type="button" id="forum-medal-award-btn">Vergabe</button>
-              <button class="btn btn-ghost" type="button" id="forum-medal-revoke-btn">Entzug</button>
-            </div>
-          </div>
-          <p class="forum-note" id="forum-medal-note">Bereit.</p>
-        </article>
-
-        <article class="forum-panel forum-admin-panel">
-          <h2>Medaillen Audit</h2>
-          <p class="forum-note">Zeigt, wer welche Einheits-Medaillie vergeben oder entzogen hat.</p>
-          <div class="forum-admin-actions">
-            <button class="btn btn-ghost" type="button" id="forum-audit-refresh">Audit aktualisieren</button>
-          </div>
-          <div id="forum-audit-list" class="forum-audit-list">
-            <p class="forum-empty">Noch keine Audit-Eintraege geladen.</p>
-          </div>
-        </article>
-      </div>
-    </section>
   </main>
 
   <footer class="site-footer">

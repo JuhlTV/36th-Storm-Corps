@@ -57,6 +57,47 @@
             <p class="forum-empty">Lade...</p>
           </div>
         </article>
+
+        <article class="forum-panel" id="profile-edit-panel" hidden>
+          <h2>Mein Profil bearbeiten</h2>
+          <p class="forum-panel-subtitle">Diese Bereiche erscheinen nur fuer dein eigenes Profil.</p>
+          <form id="profile-edit-form" class="forum-form">
+            <label>
+              <span>Anzeigename</span>
+              <input id="profile-edit-display-name" type="text" maxlength="80" placeholder="Dein Anzeigename" />
+            </label>
+            <label>
+              <span>Callsign</span>
+              <input id="profile-edit-callsign" type="text" maxlength="40" placeholder="z. B. Viper" />
+            </label>
+            <label>
+              <span>Profilbild URL</span>
+              <input id="profile-edit-avatar" type="url" maxlength="500" placeholder="https://..." />
+            </label>
+            <label>
+              <span>Profilbild Datei</span>
+              <input id="profile-edit-avatar-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+            </label>
+            <button class="btn btn-ghost" type="button" id="profile-edit-avatar-upload">Datei hochladen</button>
+            <label>
+              <span>Bio</span>
+              <textarea id="profile-edit-bio" rows="5" maxlength="400" placeholder="Kurzprofil, Spezialisierung, Squad-Rolle..."></textarea>
+            </label>
+            <button class="btn btn-primary" type="submit" id="profile-edit-save">Profil speichern</button>
+            <p class="forum-note" id="profile-edit-note">Profil noch nicht geladen.</p>
+          </form>
+        </article>
+
+        <article class="forum-panel" id="profile-contacts-panel" hidden>
+          <h2>Meine Kontakte</h2>
+          <div class="forum-contacts-head">
+            <h3>Kontakte</h3>
+            <button class="btn btn-ghost" type="button" id="profile-contacts-refresh">Aktualisieren</button>
+          </div>
+          <div id="profile-contacts-list" class="forum-contacts-list">
+            <p class="forum-empty">Keine Kontakte vorhanden.</p>
+          </div>
+        </article>
       </div>
     </section>
   </main>

@@ -388,7 +388,7 @@ const renderContacts = (contacts) => {
 };
 
 const loadContacts = async () => {
-  if (!currentUser) {
+  if (!currentUser || !forumContactsList) {
     return;
   }
 
@@ -398,7 +398,7 @@ const loadContacts = async () => {
 };
 
 const loadUnitMedals = async () => {
-  if (!currentUser) {
+  if (!currentUser || (!forumMedalAdminPanel && !forumProfileView)) {
     return;
   }
 
@@ -444,18 +444,7 @@ const openProfile = async (profileId) => {
     return;
   }
 
-  selectedProfileId = parsedId;
-  if (forumProfileSelect) {
-    forumProfileSelect.value = String(parsedId);
-  }
-
-  try {
-    const data = await apiFetch(`/api/profiles/${parsedId}`);
-    renderProfileView(data.profile);
-  } catch (error) {
-    renderProfileView(null);
-    showForumToast(error.message, 'error');
-  }
+  window.location.href = `/profile/${parsedId}`;
 };
 
 const attachProfileButtons = (root) => {
@@ -619,6 +608,10 @@ const renderThreadDetail = (thread, posts) => {
 };
 
 const loadProfiles = async () => {
+  if (!forumProfileSelect && !forumProfileView) {
+    return;
+  }
+
   const data = await apiFetch('/api/profiles');
   currentProfiles = data.profiles || [];
   renderProfileOptions(currentProfiles);
@@ -634,7 +627,7 @@ const loadProfiles = async () => {
 };
 
 const loadMyProfile = async () => {
-  if (!currentUser) {
+  if (!currentUser || !forumProfileForm) {
     return;
   }
 
@@ -672,7 +665,7 @@ const loadThread = async (threadId) => {
 };
 
 const loadAdminUsers = async () => {
-  if (!canManageUsers()) {
+  if (!canManageUsers() || !forumUserList) {
     return;
   }
 
@@ -681,7 +674,7 @@ const loadAdminUsers = async () => {
 };
 
 const loadMedalAudit = async () => {
-  if (!canManageMedals()) {
+  if (!canManageMedals() || !forumAuditList) {
     medalAuditEntries = [];
     renderMedalAudit([]);
     return;

@@ -38,6 +38,7 @@
         <a href="index.html">Hauptseite</a>
         <a href="operations-hub.html">Operations-Hub</a>
         <a href="lore-codex.html">Lore-Codex</a>
+        <a href="/profile">Profil</a>
         <a href="forum.html">Forum</a>
       </nav>
     </div>
@@ -125,6 +126,61 @@
         </div>
       </div>
     </section>
+
+      <section class="admin-tools section-reveal" id="portal-admin-tools" aria-label="Portal Verwaltung">
+        <div class="container">
+          <p class="eyebrow">Portal-Verwaltung</p>
+          <h2>Rollen, Medaillen und Audit</h2>
+          <p class="lead">Diese Bereiche gehoeren in die Admin-Konsole, nicht ins Forum.</p>
+
+          <div class="admin-grid">
+            <article class="admin-card" id="portal-role-admin-card">
+              <h3>Rollenverwaltung</h3>
+              <p class="admin-note">Owner und Admins koennen Rollen setzen.</p>
+              <div id="portal-user-list" class="forum-user-list"></div>
+            </article>
+
+            <article class="admin-card" id="portal-role-status-card">
+              <h3>Rollenstatus</h3>
+              <p class="validation-summary" id="portal-role-note">Lade...</p>
+              <div class="admin-actions">
+                <button type="button" class="btn btn-ghost" id="portal-users-refresh">Nutzer aktualisieren</button>
+              </div>
+            </article>
+
+            <article class="admin-card" id="portal-medal-card">
+              <h3>Medaillenverwaltung</h3>
+              <p class="admin-note">Nur Rollen mit Rechten koennen Einheits-Medaillen vergeben oder entziehen.</p>
+              <div class="forum-medal-manager">
+                <label>
+                  <span>Nutzer</span>
+                  <select id="portal-medal-user-select"><option value="">Nutzer waehlen...</option></select>
+                </label>
+                <label>
+                  <span>Medaillie</span>
+                  <select id="portal-medal-select"><option value="">Medaillie waehlen...</option></select>
+                </label>
+                <div class="forum-profile-actions">
+                  <button type="button" class="btn btn-ghost" id="portal-medal-award-btn">Vergabe</button>
+                  <button type="button" class="btn btn-ghost" id="portal-medal-revoke-btn">Entzug</button>
+                </div>
+              </div>
+              <p class="admin-note" id="portal-medal-note">Bereit.</p>
+            </article>
+
+            <article class="admin-card" id="portal-audit-card">
+              <h3>Medaillen Audit</h3>
+              <p class="admin-note">Wer hat welche Medaille wann vergeben oder entzogen.</p>
+              <div class="admin-actions">
+                <button type="button" class="btn btn-ghost" id="portal-audit-refresh">Audit aktualisieren</button>
+              </div>
+              <div id="portal-audit-list" class="forum-audit-list">
+                <p class="forum-empty">Noch keine Audit-Eintraege geladen.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
   </main>
 
   <footer class="site-footer">
@@ -156,5 +212,7 @@
   </footer>
 
   <script src="script.js"></script>
+  <script src="api-config.js?v=20260527e"></script>
+  <script src="admin-console.js"></script>
 </body>
 </html>
