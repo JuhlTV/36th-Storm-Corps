@@ -46,6 +46,7 @@ const OWNER_IP_LOCK = String(process.env.OWNER_IP_LOCK || 'false').toLowerCase()
 const allowedRoles = new Set(['owner', 'admin', 'moderator', 'member']);
 const dataDir = path.join(__dirname, 'data');
 const errorLogPath = path.join(dataDir, 'error.log');
+const isProduction = process.env.NODE_ENV === 'production';
 initDb();
 
 const sanitizeUser = (user) => {
@@ -260,14 +261,20 @@ if (googleClientId && googleClientSecret) {
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+if (isProduction) {
+  app.set('trust proxy', 1);
+}
+
 app.use(session({
   secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  proxy: isProduction,
   cookie: {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProduction,
     maxAge: 1000 * 60 * 60 * 24 * 7,
   },
 }));
@@ -280,7 +287,7 @@ app.use((req, res, next) => {
 
 app.use(express.static(STATIC_ROOT, {
   extensions: ['html'],
-  maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0,
+  maxAge: isProduction ? '1h' : 0,
 }));
 
 app.get('/health', (req, res) => {
