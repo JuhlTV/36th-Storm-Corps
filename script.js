@@ -1185,6 +1185,7 @@ const downloadEditorJson = () => {
 const closeMenus = () => {
   if (menuToggle && mainNav) {
     menuToggle.setAttribute('aria-expanded', 'false');
+    menuToggle.setAttribute('aria-label', 'Menue oeffnen');
     mainNav.classList.remove('open');
   }
 
@@ -1649,13 +1650,16 @@ if (navDropdown && dropdownToggle) {
 if (menuToggle && mainNav) {
   menuToggle.addEventListener('click', () => {
     const isExpanded = menuToggle.getAttribute('aria-expanded') === 'true';
-    menuToggle.setAttribute('aria-expanded', String(!isExpanded));
+    const nextExpanded = !isExpanded;
+    menuToggle.setAttribute('aria-expanded', String(nextExpanded));
+    menuToggle.setAttribute('aria-label', nextExpanded ? 'Menue schliessen' : 'Menue oeffnen');
     mainNav.classList.toggle('open');
   });
 
   mainNav.querySelectorAll('a').forEach((link) => {
     link.addEventListener('click', () => {
       menuToggle.setAttribute('aria-expanded', 'false');
+      menuToggle.setAttribute('aria-label', 'Menue oeffnen');
       mainNav.classList.remove('open');
       if (navDropdown && dropdownToggle) {
         navDropdown.classList.remove('open');
