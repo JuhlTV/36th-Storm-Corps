@@ -15,12 +15,12 @@ const {
 const {
   initDb,
   getDatabase,
-  clearLocalCredentials,
   countUsers,
   createLocalUser,
   deleteUserById,
   findUserById,
   findUserByLogin,
+  setLocalCredentials,
   upsertUserFromGoogle,
   listUsers,
   setUserRole,
@@ -353,30 +353,50 @@ app.post('/auth/register', async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid email address' });
     }
 
-    if (findAccountByLogin(username) || findUserByLogin(username)) {
+    const existingUsernameUser = findUserByLogin(username);
+    const existingEmailUser = email ? findUserByLogin(email) : null;
+    const existingUser = existingUsernameUser || existingEmailUser || null;
+    const hasSplitConflict = Boolean(
+      existingUsernameUser && existingEmailUser && existingUsernameUser.id !== existingEmailUser.id
+    );
+    const hasRecoverableExistingUser = Boolean(
+      existingUser
+      && existingUser.auth_provider === 'local'
+      && !existingUser.password_hash
+    );
+
+    if (findAccountByLogin(username) || hasSplitConflict || (existingUsernameUser && !hasRecoverableExistingUser)) {
       return res.status(409).json({ error: 'Username already exists' });
     }
 
-    if (email && (findAccountByLogin(email) || findUserByLogin(email))) {
+    if (email && (findAccountByLogin(email) || (existingEmailUser && !hasRecoverableExistingUser))) {
       return res.status(409).json({ error: 'Email already exists' });
     }
 
+    const passwordHash = await bcrypt.hash(password, 12);
     const role = resolveInitialLocalRole({
       username,
       email,
       ipAddress,
       isFirstUser: countUsers() === 0,
     });
-
-    const passwordHash = await bcrypt.hash(password, 12);
-    const user = createLocalUser({
-      username,
-      email: email || null,
-      passwordHash: passwordHash,
-      displayName: displayName || username,
-      ipAddress,
-      defaultRole: role,
-    });
+    const user = hasRecoverableExistingUser
+      ? setLocalCredentials({
+          userId: existingUser.id,
+          username,
+          email: email || null,
+          passwordHash,
+          displayName: displayName || username,
+          ipAddress,
+        })
+      : createLocalUser({
+          username,
+          email: email || null,
+          passwordHash,
+          displayName: displayName || username,
+          ipAddress,
+          defaultRole: role,
+        });
 
     syncLocalAccountBestEffort({
       userId: user.id,
@@ -434,6 +454,17 @@ app.post('/auth/login', async (req, res, next) => {
         return res.status(401).json({ error: 'Account not found' });
       }
 
+      if (dbUser.auth_provider === 'local' && !dbUser.password_hash) {
+        dbUser = setLocalCredentials({
+          userId: dbUser.id,
+          username: authAccount.username,
+          email: authAccount.email,
+          passwordHash: authAccount.passwordHash,
+          displayName: dbUser.display_name,
+          ipAddress,
+        }) || dbUser;
+      }
+
       touchAccountLoginBestEffort({ accountId: authAccount.id, req, userId: dbUser.id });
     } else {
       const legacyUser = findUserByLogin(login);
@@ -454,8 +485,15 @@ app.post('/auth/login', async (req, res, next) => {
         req,
       });
 
+      dbUser = setLocalCredentials({
+        userId: legacyUser.id,
+        username: legacyUser.username,
+        email: legacyUser.email,
+        passwordHash: legacyUser.password_hash,
+        displayName: legacyUser.display_name,
+        ipAddress,
+      }) || legacyUser;
       touchAccountLoginBestEffort({ accountId: authAccount?.id, req, userId: legacyUser.id });
-      dbUser = legacyUser;
     }
 
     const updatedUser = touchUserLogin({ userId: dbUser.id, ipAddress });

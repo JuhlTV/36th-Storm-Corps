@@ -209,6 +209,31 @@ const touchUserLogin = ({ userId, ipAddress }) => {
   });
 };
 
+const setLocalCredentials = ({ userId, username, email = null, passwordHash, displayName, ipAddress }) => {
+  return withStore((store) => {
+    const user = store.users.find((entry) => entry.id === userId);
+    if (!user) {
+      return null;
+    }
+
+    const normalizedUsername = username ? String(username).trim().toLowerCase() : null;
+    const normalizedEmail = email ? String(email).trim().toLowerCase() : null;
+    const timestamp = nowIso();
+
+    user.google_sub = normalizedUsername ? `local:${normalizedUsername}` : user.google_sub;
+    user.username = normalizedUsername;
+    user.email = normalizedEmail;
+    user.auth_provider = 'local';
+    user.password_hash = passwordHash || user.password_hash || null;
+    user.display_name = displayName || user.display_name;
+    user.first_ip = user.first_ip || ipAddress || null;
+    user.last_ip = ipAddress || user.last_ip || null;
+    user.updated_at = timestamp;
+    user.last_login_at = user.last_login_at || timestamp;
+    return user;
+  });
+};
+
 const clearLocalCredentials = ({ userId }) => {
   return withStore((store) => {
     const user = store.users.find((entry) => entry.id === userId);
@@ -402,6 +427,7 @@ module.exports = {
   getDatabase,
   countUsers,
   createLocalUser,
+  setLocalCredentials,
   clearLocalCredentials,
   deleteUserById,
   findUserById,
