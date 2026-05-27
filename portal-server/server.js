@@ -87,6 +87,48 @@ const appendErrorLog = ({ type, message, stack, request }) => {
   }
 };
 
+const syncLocalAccountBestEffort = ({ userId, username, email, passwordHash, req }) => {
+  try {
+    return createAccount({ userId, username, email, passwordHash });
+  } catch (error) {
+    appendErrorLog({
+      type: 'auth_store_sync_failed',
+      message: String(error?.message || error),
+      stack: error?.stack || null,
+      request: req ? {
+        method: req.method,
+        path: req.originalUrl,
+        ip: getClientIp(req),
+        userId: userId || null,
+      } : null,
+    });
+
+    return null;
+  }
+};
+
+const touchAccountLoginBestEffort = ({ accountId, req, userId }) => {
+  if (!accountId) {
+    return;
+  }
+
+  try {
+    touchAccountLogin({ accountId });
+  } catch (error) {
+    appendErrorLog({
+      type: 'auth_store_touch_failed',
+      message: String(error?.message || error),
+      stack: error?.stack || null,
+      request: req ? {
+        method: req.method,
+        path: req.originalUrl,
+        ip: getClientIp(req),
+        userId: userId || null,
+      } : null,
+    });
+  }
+};
+
 const getClientIp = (req) => {
   const forwarded = req.headers['x-forwarded-for'];
   if (typeof forwarded === 'string' && forwarded.trim()) {
@@ -304,11 +346,11 @@ app.post('/auth/register', async (req, res, next) => {
       return res.status(400).json({ error: 'Invalid email address' });
     }
 
-    if (findAccountByLogin(username)) {
+    if (findAccountByLogin(username) || findUserByLogin(username)) {
       return res.status(409).json({ error: 'Username already exists' });
     }
 
-    if (email && findAccountByLogin(email)) {
+    if (email && (findAccountByLogin(email) || findUserByLogin(email))) {
       return res.status(409).json({ error: 'Email already exists' });
     }
 
@@ -329,17 +371,13 @@ app.post('/auth/register', async (req, res, next) => {
       defaultRole: role,
     });
 
-    try {
-      createAccount({
-        userId: user.id,
-        username,
-        email: email || null,
-        passwordHash,
-      });
-    } catch (storeError) {
-      deleteUserById({ userId: user.id });
-      throw storeError;
-    }
+    syncLocalAccountBestEffort({
+      userId: user.id,
+      username,
+      email: email || null,
+      passwordHash,
+      req,
+    });
 
     req.logIn(user, (loginError) => {
       if (loginError) {
@@ -376,37 +414,41 @@ app.post('/auth/login', async (req, res, next) => {
     }
 
     let authAccount = findAccountByLogin(login);
+    let dbUser = null;
 
-    if (!authAccount) {
-      const legacyUser = findUserByLogin(login);
-      if (legacyUser && legacyUser.password_hash && legacyUser.auth_provider === 'local') {
-        const legacyPasswordValid = await bcrypt.compare(password, legacyUser.password_hash);
-        if (legacyPasswordValid) {
-          authAccount = createAccount({
-            userId: legacyUser.id,
-            username: legacyUser.username,
-            email: legacyUser.email,
-            passwordHash: legacyUser.password_hash,
-          });
-
-          clearLocalCredentials({ userId: legacyUser.id });
-        }
+    if (authAccount && authAccount.passwordHash) {
+      const passwordValid = await bcrypt.compare(password, authAccount.passwordHash);
+      if (!passwordValid) {
+        return res.status(401).json({ error: 'Invalid credentials' });
       }
-    }
 
-    if (!authAccount || !authAccount.passwordHash) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
+      dbUser = findUserById(authAccount.userId);
+      if (!dbUser) {
+        return res.status(401).json({ error: 'Account not found' });
+      }
 
-    const passwordValid = await bcrypt.compare(password, authAccount.passwordHash);
-    if (!passwordValid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
+      touchAccountLoginBestEffort({ accountId: authAccount.id, req, userId: dbUser.id });
+    } else {
+      const legacyUser = findUserByLogin(login);
+      if (!legacyUser || !legacyUser.password_hash || legacyUser.auth_provider !== 'local') {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
 
-    touchAccountLogin({ accountId: authAccount.id });
-    const dbUser = findUserById(authAccount.userId);
-    if (!dbUser) {
-      return res.status(401).json({ error: 'Account not found' });
+      const legacyPasswordValid = await bcrypt.compare(password, legacyUser.password_hash);
+      if (!legacyPasswordValid) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      authAccount = syncLocalAccountBestEffort({
+        userId: legacyUser.id,
+        username: legacyUser.username,
+        email: legacyUser.email,
+        passwordHash: legacyUser.password_hash,
+        req,
+      });
+
+      touchAccountLoginBestEffort({ accountId: authAccount?.id, req, userId: legacyUser.id });
+      dbUser = legacyUser;
     }
 
     const updatedUser = touchUserLogin({ userId: dbUser.id, ipAddress });
