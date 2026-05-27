@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const dataDir = path.join(__dirname, 'data');
+const dataDir = path.resolve(process.env.PORTAL_DATA_DIR || path.join(__dirname, 'data'));
 const storePath = path.join(dataDir, 'portal-data.json');
 
 const nowIso = () => new Date().toISOString();

@@ -34,6 +34,13 @@ This folder contains the backend scaffold for the portal upgrade.
 - IP binding is supported as an optional lock via `OWNER_IP_LOCK=true`, but it should be treated as an additional restriction, not the only identity factor.
 - If `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set, Google OAuth routes remain available as optional fallback.
 - The backend also exposes `/api/users` and `/api/forum/*` for future React, Vue, or plain JS frontends.
+- For persistent production data, set `PORTAL_DATA_DIR` to a mounted persistent volume path (for Railway typically `/data`). Without this, local users and sessions can be lost after redeploys.
+
+## Railway persistence
+1. Add a persistent volume in Railway and mount it to `/data`.
+2. Set the environment variable `PORTAL_DATA_DIR=/data`.
+3. Keep `SESSION_SECRET` and `AUTH_ENCRYPTION_KEY` stable between deploys.
+4. Redeploy once after setting the variables.
 
 ## Ops
 - `npm run backup` creates a dated backup of `data/portal-data.json` and `data/auth.enc.json` and validates the copied files.

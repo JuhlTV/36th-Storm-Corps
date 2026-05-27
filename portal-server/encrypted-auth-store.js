@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const dataDir = path.join(__dirname, 'data');
+const dataDir = path.resolve(process.env.PORTAL_DATA_DIR || path.join(__dirname, 'data'));
 const authFilePath = path.join(dataDir, 'auth.enc.json');
 
 const nowIso = () => new Date().toISOString();

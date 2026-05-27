@@ -44,7 +44,7 @@ const OWNER_GOOGLE_SUB = process.env.OWNER_GOOGLE_SUB?.trim() || '';
 const OWNER_IP = process.env.OWNER_IP?.trim() || '';
 const OWNER_IP_LOCK = String(process.env.OWNER_IP_LOCK || 'false').toLowerCase() === 'true';
 const allowedRoles = new Set(['owner', 'admin', 'moderator', 'member']);
-const dataDir = path.join(__dirname, 'data');
+const dataDir = path.resolve(process.env.PORTAL_DATA_DIR || path.join(__dirname, 'data'));
 const errorLogPath = path.join(dataDir, 'error.log');
 const isProduction = process.env.NODE_ENV === 'production';
 initDb();
