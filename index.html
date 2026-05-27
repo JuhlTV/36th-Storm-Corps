@@ -8,6 +8,16 @@
     name="description"
     content="Serious Hardcore RP Server der 36th Storm Corps: klare Befehlsketten, diszipliniertes Clone-Wars-RP, feste Standards, Einsaetze und strukturierte Teamrollen."
   />
+  <meta name="theme-color" content="#020305" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="36th Storm Corps" />
+  <meta property="og:title" content="36th Storm Corps | Spezialisierte Cloneinheit" />
+  <meta property="og:description" content="Serious Hardcore RP Server der 36th Storm Corps: klare Befehlsketten, diszipliniertes Clone-Wars-RP, feste Standards, Einsaetze und strukturierte Teamrollen." />
+  <meta property="og:image" content="90b2f19b-4dfd-48df-9bec-dfad5390eb02.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="36th Storm Corps | Spezialisierte Cloneinheit" />
+  <meta name="twitter:description" content="Serious Hardcore RP Server der 36th Storm Corps: klare Befehlsketten, diszipliniertes Clone-Wars-RP, feste Standards, Einsaetze und strukturierte Teamrollen." />
+  <meta name="twitter:image" content="90b2f19b-4dfd-48df-9bec-dfad5390eb02.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -25,8 +35,15 @@
       <div class="briefing-crawl-perspective">
         <div class="briefing-crawl-content">
           <p class="briefing-label">Republic Tactical Briefing</p>
-          <h1>Grand Army of the Republic</h1>
-          <p class="briefing-unit">Unit: 36th Storm Corps | Clearance: Aurek-36</p>
+          <h1>
+            <span class="briefing-title-top">Grand Army</span>
+            <span class="briefing-title-bottom">of the Republic</span>
+          </h1>
+          <p class="briefing-unit">
+            <span class="briefing-unit-chip">Unit: 36th Storm Corps</span>
+            <span class="briefing-unit-divider" aria-hidden="true"></span>
+            <span class="briefing-unit-chip">Clearance: Aurek-36</span>
+          </p>
           <div class="briefing-crawl-text" id="briefing-crawl-copy" aria-live="polite">
             <p>Die 36th Storm Corps tritt den Krieg nicht als Legende an, sondern als praezise republikanische Einsatzformation.</p>
             <p>Seit Geonosis steht die Einheit fuer Disziplin, saubere Befehlswege und schnelle Reaktion unter Druck.</p>
@@ -37,9 +54,10 @@
           </div>
         </div>
       </div>
-      <button class="btn btn-primary briefing-enter" id="briefing-enter" type="button">Ueberspringen</button>
-      <button class="briefing-sound-toggle" id="briefing-sound-toggle" type="button" aria-pressed="false">SFX: OFF</button>
-      <p class="briefing-audio-hint" id="briefing-audio-hint" hidden>Musik startet beim naechsten Klick.</p>
+      <button class="btn btn-primary briefing-enter" id="briefing-enter" type="button" data-briefing-controls="true">Ueberspringen</button>
+      <button class="briefing-persist-toggle" id="briefing-persist-toggle" type="button" aria-pressed="false" data-briefing-controls="true">AUTO-SKIP: AUS</button>
+      <button class="briefing-sound-toggle" id="briefing-sound-toggle" type="button" aria-pressed="false" data-briefing-controls="true">SFX: OFF</button>
+      <p class="briefing-audio-hint" id="briefing-audio-hint" hidden data-briefing-controls="true">Musik startet beim naechsten Klick.</p>
     </div>
   </section>
 
@@ -78,6 +96,7 @@
             <a href="operations-hub.html">Operations-Hub</a>
             <a href="lore-codex.html">Lore-Codex</a>
             <a href="admin-console.html">Admin-Konsole</a>
+            <a href="login.html">Login</a>
           </div>
         </div>
         <a href="forum.html">Forum</a>
@@ -88,6 +107,7 @@
         <a href="#kalender">Kalender</a>
         <a href="#mitglieder">Mitglieder</a>
         <a href="lore-codex.html">Lore</a>
+        <a href="login.html" class="btn btn-ghost nav-login-btn">Login</a>
       </nav>
     </div>
   </header>
@@ -96,9 +116,19 @@
     <section class="hero section-reveal">
       <div class="container hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow">Republic Covert Strike Corps</p>
-          <h1>36th Storm Corps</h1>
-          <p class="tagline">Unsichtbar im Anflug. Endgueltig im Zugriff.</p>
+          <p class="eyebrow hero-eyebrow">Republic Covert Strike Corps</p>
+          <h1 class="hero-title">
+            <span class="hero-title-top">36th</span>
+            <span class="hero-title-bottom">Storm Corps</span>
+          </h1>
+          <p class="tagline hero-tagline">Unsichtbar im Anflug. Endgueltig im Zugriff.</p>
+          <p class="hero-command-line">
+            <span class="hero-command-chip">Sector: Outer Rim</span>
+            <span class="hero-command-divider" aria-hidden="true"></span>
+            <span class="hero-command-chip">Protocol: Aurek-36</span>
+            <span class="hero-command-divider" aria-hidden="true"></span>
+            <span class="hero-command-chip">Status: Operational</span>
+          </p>
           <p class="lead">
             Dieser Server steht fuer Serious Hardcore RP: klare Befehlsketten, hohe Disziplin,
             konsequente Konsequenzen und taktische Teamarbeit unter Druck.
@@ -811,9 +841,32 @@
   </main>
 
   <footer class="site-footer">
-    <div class="container footer-inner">
-      <p>36th Storm Corps | Republic Special Operations Unit</p>
-      <p><a href="privacy.html">Datenschutzerklärung</a> | <a href="impressum.html">Impressum</a> | &copy; <span id="year"></span> Alle Rechte vorbehalten.</p>
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand-col">
+          <a href="index.html" class="footer-brand">
+            <span class="brand-mark">36</span>
+            <span class="footer-brand-name">STORM CORPS</span>
+          </a>
+          <p class="footer-tagline">Republic Special Operations Unit</p>
+        </div>
+        <nav class="footer-nav" aria-label="Footer-Navigation">
+          <a href="#server-info">Server-Info</a>
+          <a href="forum.html">Forum</a>
+          <a href="operations-hub.html">Operations-Hub</a>
+          <a href="lore-codex.html">Lore-Codex</a>
+          <a href="login.html">Login</a>
+        </nav>
+        <nav class="footer-legal" aria-label="Rechtliches">
+          <a href="privacy.html">Datenschutz</a>
+          <a href="impressum.html">Impressum</a>
+          <a href="admin-console.html">Admin</a>
+        </nav>
+      </div>
+      <div class="footer-bottom">
+        <span class="footer-copy">&copy; <span class="footer-year">2026</span> 36th Storm Corps. Alle Rechte vorbehalten.</span>
+        <span class="footer-classification">Republic Secure Network</span>
+      </div>
     </div>
   </footer>
 

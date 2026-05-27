@@ -4,6 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Forum | 36th Storm Corps</title>
+  <meta name="description" content="Forum der 36th Storm Corps: Threads, Antworten, Moderation und Rollenverwaltung." />
+  <meta name="theme-color" content="#020305" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="36th Storm Corps" />
+  <meta property="og:title" content="Forum | 36th Storm Corps" />
+  <meta property="og:description" content="Forum der 36th Storm Corps: Threads, Antworten, Moderation und Rollenverwaltung." />
+  <meta property="og:image" content="90b2f19b-4dfd-48df-9bec-dfad5390eb02.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Forum | 36th Storm Corps" />
+  <meta name="twitter:description" content="Forum der 36th Storm Corps: Threads, Antworten, Moderation und Rollenverwaltung." />
+  <meta name="twitter:image" content="90b2f19b-4dfd-48df-9bec-dfad5390eb02.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -24,6 +35,7 @@
         <a href="operations-hub.html">Operations-Hub</a>
         <a href="lore-codex.html">Lore-Codex</a>
         <a href="admin-console.html">Admin-Konsole</a>
+        <a href="login.html?redirect=forum.html" class="btn btn-ghost nav-login-btn">Login</a>
       </nav>
     </div>
   </header>
@@ -35,65 +47,32 @@
         <h1>Forum</h1>
         <p class="lead">Threads, Antworten, Rechte und Moderation laufen ueber das Backend. Anmeldung funktioniert lokal mit Username und Passwort.</p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="#forum-auth">Login / Registrieren</a>
+          <a class="btn btn-primary" href="login.html?redirect=forum.html">Login</a>
+          <a class="btn btn-ghost" href="register.html">Registrieren</a>
           <button class="btn btn-ghost" type="button" id="forum-refresh-btn">Threads aktualisieren</button>
           <button class="btn btn-ghost" type="button" id="forum-logout-btn">Abmelden</button>
         </div>
       </div>
     </section>
 
-    <section class="forum-board section-reveal" id="forum-auth">
-      <div class="container forum-grid">
-        <article class="forum-panel forum-auth-intro">
-          <p class="eyebrow">Secure Access</p>
-          <h2>Portal Login</h2>
-          <p class="forum-intro-copy">Registrierung und Anmeldung laufen lokal, ohne Client ID, Secret oder fremde Domain. Accounts werden verschluesselt gespeichert und der Zugang bleibt kontrollierbar.</p>
-          <div class="forum-pill-row" aria-label="Portal Vorteile">
-            <span class="forum-pill">Verschluesselt at rest</span>
-            <span class="forum-pill">Keine Domain noetig</span>
-            <span class="forum-pill">Owner / Admin Rollen</span>
+    <section class="forum-board section-reveal forum-auth-banner" id="forum-auth">
+      <div class="container">
+        <div class="forum-auth-cta">
+          <div class="forum-auth-cta-copy">
+            <p class="eyebrow">Secure Access</p>
+            <h2>Portal Login</h2>
+            <p>Registrierung und Anmeldung laufen lokal &#8212; verschluesselt, ohne externe Dienste. Melde dich an, um Threads zu erstellen und am Forum teilzunehmen.</p>
+            <div class="forum-pill-row">
+              <span class="forum-pill">Verschluesselt at rest</span>
+              <span class="forum-pill">Keine Domain noetig</span>
+              <span class="forum-pill">Owner / Admin Rollen</span>
+            </div>
           </div>
-        </article>
-
-        <article class="forum-panel forum-auth-card">
-          <h2>Login</h2>
-          <form id="forum-login-form" class="forum-form">
-            <label>
-              <span>Username oder E-Mail</span>
-              <input id="forum-login-identity" type="text" maxlength="120" placeholder="z. B. commander36 oder name@mail.de" />
-            </label>
-            <label>
-              <span>Passwort</span>
-              <input id="forum-login-password" type="password" maxlength="160" placeholder="Mindestens 8 Zeichen" />
-            </label>
-            <button class="btn btn-primary" type="submit">Einloggen</button>
-            <p class="forum-note" id="forum-login-note">Noch kein Account? Rechts registrieren.</p>
-          </form>
-        </article>
-
-        <article class="forum-panel forum-auth-card">
-          <h2>Registrierung</h2>
-          <form id="forum-register-form" class="forum-form">
-            <label>
-              <span>Username</span>
-              <input id="forum-register-username" type="text" maxlength="32" placeholder="a-z, 0-9, ., _, -" />
-            </label>
-            <label>
-              <span>Anzeigename</span>
-              <input id="forum-register-display" type="text" maxlength="120" placeholder="Wird im Forum angezeigt" />
-            </label>
-            <label>
-              <span>E-Mail (optional)</span>
-              <input id="forum-register-email" type="email" maxlength="160" placeholder="optional" />
-            </label>
-            <label>
-              <span>Passwort</span>
-              <input id="forum-register-password" type="password" maxlength="160" placeholder="Mindestens 8 Zeichen" />
-            </label>
-            <button class="btn btn-primary" type="submit">Registrieren</button>
-            <p class="forum-note" id="forum-register-note">Nach Registrierung bist du direkt eingeloggt.</p>
-          </form>
-        </article>
+          <div class="forum-auth-cta-actions">
+            <a href="login.html?redirect=forum.html" class="btn btn-primary">Einloggen</a>
+            <a href="register.html" class="btn btn-ghost">Registrieren</a>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -183,9 +162,32 @@
   </main>
 
   <footer class="site-footer">
-    <div class="container footer-inner">
-      <p>36th Storm Corps | Republic Special Operations Unit</p>
-      <p><a href="index.html">Startseite</a> | <a href="privacy.html">Datenschutzerklärung</a> | <a href="impressum.html">Impressum</a> | <a href="admin-console.html">Admin-Konsole</a></p>
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand-col">
+          <a href="index.html" class="footer-brand">
+            <span class="brand-mark">36</span>
+            <span class="footer-brand-name">STORM CORPS</span>
+          </a>
+          <p class="footer-tagline">Republic Special Operations Unit</p>
+        </div>
+        <nav class="footer-nav" aria-label="Footer-Navigation">
+          <a href="index.html">Startseite</a>
+          <a href="operations-hub.html">Operations-Hub</a>
+          <a href="lore-codex.html">Lore-Codex</a>
+          <a href="login.html?redirect=forum.html">Login</a>
+          <a href="register.html">Registrieren</a>
+        </nav>
+        <nav class="footer-legal" aria-label="Rechtliches">
+          <a href="privacy.html">Datenschutz</a>
+          <a href="impressum.html">Impressum</a>
+          <a href="admin-console.html">Admin</a>
+        </nav>
+      </div>
+      <div class="footer-bottom">
+        <span class="footer-copy">&copy; 2026 36th Storm Corps. Alle Rechte vorbehalten.</span>
+        <span class="footer-classification">Republic Secure Network</span>
+      </div>
     </div>
   </footer>
 

@@ -18,22 +18,19 @@ const forumAdminSection = document.getElementById('forum-admin-section');
 const forumUserList = document.getElementById('forum-user-list');
 const forumAdminNote = document.getElementById('forum-admin-note');
 const forumAdminRefresh = document.getElementById('forum-admin-refresh');
-const forumLoginForm = document.getElementById('forum-login-form');
-const forumLoginIdentity = document.getElementById('forum-login-identity');
-const forumLoginPassword = document.getElementById('forum-login-password');
-const forumLoginNote = document.getElementById('forum-login-note');
-const forumRegisterForm = document.getElementById('forum-register-form');
-const forumRegisterUsername = document.getElementById('forum-register-username');
-const forumRegisterDisplay = document.getElementById('forum-register-display');
-const forumRegisterEmail = document.getElementById('forum-register-email');
-const forumRegisterPassword = document.getElementById('forum-register-password');
-const forumRegisterNote = document.getElementById('forum-register-note');
 const forumRevealSections = document.querySelectorAll('.section-reveal');
 
 let selectedThreadId = null;
 let currentUser = null;
 let ownerLockInfo = null;
 let currentUsers = [];
+let currentThreadCache = [];
+
+const forumToastRoot = document.createElement('div');
+forumToastRoot.className = 'toast-stack';
+forumToastRoot.setAttribute('aria-live', 'polite');
+forumToastRoot.setAttribute('aria-atomic', 'true');
+document.body.appendChild(forumToastRoot);
 
 const escapeHtml = (value) => String(value)
   .replaceAll('&', '&amp;')
@@ -41,6 +38,33 @@ const escapeHtml = (value) => String(value)
   .replaceAll('>', '&gt;')
   .replaceAll('"', '&quot;')
   .replaceAll("'", '&#39;');
+
+const showForumToast = (message, type = 'info') => {
+  if (!message) {
+    return;
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast--${type}`;
+  toast.textContent = message;
+  forumToastRoot.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('is-visible'));
+
+  window.setTimeout(() => {
+    toast.classList.remove('is-visible');
+    window.setTimeout(() => toast.remove(), 220);
+  }, 2600);
+};
+
+const currentForumLocation = () => {
+  const pageName = window.location.pathname.split('/').pop() || 'forum.html';
+  return `${pageName}${window.location.search}${window.location.hash}`;
+};
+
+const redirectToLogin = () => {
+  const target = encodeURIComponent(currentForumLocation());
+  window.location.replace(`login.html?redirect=${target}`);
+};
 
 const revealForumSections = () => {
   forumRevealSections.forEach((section, index) => {
@@ -127,23 +151,33 @@ const renderUsers = (users) => {
     select.addEventListener('change', async () => {
       const userId = Number(select.dataset.roleSelect);
       const role = select.value;
+      const userRecord = users.find((user) => user.id === userId);
+      const previousRole = userRecord?.role || 'member';
+      const userLabel = userRecord?.display_name || `Nutzer ${userId}`;
 
       try {
+        select.disabled = true;
+
         await apiFetch(`/api/users/${userId}/role`, {
           method: 'PATCH',
           body: JSON.stringify({ role }),
         });
 
         if (forumAdminNote) {
-          forumAdminNote.textContent = `Rolle fuer Nutzer ${userId} wurde auf ${role} gesetzt.`;
+          forumAdminNote.textContent = `Rolle fuer ${userLabel} wurde von ${previousRole} auf ${role} gesetzt.`;
         }
+
+        showForumToast(`Rolle aktualisiert: ${userLabel} ist jetzt ${role}.`, 'success');
 
         await loadAdminUsers();
       } catch (error) {
         if (forumAdminNote) {
-          forumAdminNote.textContent = error.message;
+          forumAdminNote.textContent = `Rollenupdate fuer ${userLabel} fehlgeschlagen: ${error.message}`;
         }
-        select.value = users.find((user) => user.id === userId)?.role || 'member';
+        showForumToast(`Rollenupdate fehlgeschlagen fuer ${userLabel}.`, 'error');
+        select.value = previousRole;
+      } finally {
+        select.disabled = false;
       }
     });
   });
@@ -167,6 +201,23 @@ const renderThreads = (threads) => {
   forumThreadList.querySelectorAll('[data-thread-id]').forEach((button) => {
     button.addEventListener('click', () => loadThread(Number(button.dataset.threadId)));
   });
+};
+
+const renderThreadSkeleton = () => {
+  forumThreadList.innerHTML = Array.from({ length: 4 }, () => `
+    <div class="forum-thread-card forum-skeleton-card" aria-hidden="true">
+      <span class="forum-skeleton forum-skeleton-line"></span>
+      <span class="forum-skeleton forum-skeleton-line forum-skeleton-line--short"></span>
+    </div>
+  `).join('');
+
+  forumThreadDetail.innerHTML = `
+    <div class="forum-thread-view forum-skeleton-block" aria-hidden="true">
+      <span class="forum-skeleton forum-skeleton-line"></span>
+      <span class="forum-skeleton forum-skeleton-line forum-skeleton-line--medium"></span>
+      <span class="forum-skeleton forum-skeleton-line forum-skeleton-line--short"></span>
+    </div>
+  `;
 };
 
 const renderThreadDetail = (thread, posts) => {
@@ -195,6 +246,7 @@ const renderThreadDetail = (thread, posts) => {
 };
 
 const loadThreads = async () => {
+  renderThreadSkeleton();
   const data = await apiFetch('/api/forum/threads');
   currentThreadCache = data.threads;
   renderThreads(data.threads);
@@ -222,8 +274,6 @@ const loadThread = async (threadId) => {
   renderThreadDetail(data.thread, data.posts);
 };
 
-let currentThreadCache = [];
-
 const loadAdminUsers = async () => {
   if (!currentUser || !['owner', 'admin'].includes(currentUser.role)) {
     return;
@@ -234,7 +284,12 @@ const loadAdminUsers = async () => {
 };
 
 forumRefreshBtn?.addEventListener('click', async () => {
-  await loadThreads();
+  try {
+    await loadThreads();
+    showForumToast('Threads aktualisiert', 'success');
+  } catch (error) {
+    showForumToast(error.message, 'error');
+  }
 });
 
 forumAdminRefresh?.addEventListener('click', async () => {
@@ -244,9 +299,10 @@ forumAdminRefresh?.addEventListener('click', async () => {
 forumLogoutBtn?.addEventListener('click', async () => {
   try {
     await apiFetch('/auth/logout', { method: 'POST' });
-    window.location.reload();
+    redirectToLogin();
   } catch (error) {
     forumAuthState.textContent = error.message;
+    showForumToast(error.message, 'error');
   }
 });
 
@@ -261,14 +317,21 @@ forumThreadForm?.addEventListener('submit', async (event) => {
   const title = forumThreadTitle.value.trim();
   const body = forumThreadBody.value.trim();
 
-  await apiFetch('/api/forum/threads', {
-    method: 'POST',
-    body: JSON.stringify({ title, body }),
-  });
+  try {
+    await apiFetch('/api/forum/threads', {
+      method: 'POST',
+      body: JSON.stringify({ title, body }),
+    });
 
-  forumThreadTitle.value = '';
-  forumThreadBody.value = '';
-  await loadThreads();
+    forumThreadTitle.value = '';
+    forumThreadBody.value = '';
+    forumThreadFormNote.textContent = 'Thread erfolgreich gepostet.';
+    showForumToast('Thread erfolgreich gepostet', 'success');
+    await loadThreads();
+  } catch (error) {
+    forumThreadFormNote.textContent = error.message;
+    showForumToast(error.message, 'error');
+  }
 });
 
 forumReplyForm?.addEventListener('submit', async (event) => {
@@ -284,63 +347,20 @@ forumReplyForm?.addEventListener('submit', async (event) => {
     return;
   }
 
-  const body = forumReplyBody.value.trim();
-  await apiFetch(`/api/forum/threads/${selectedThreadId}/posts`, {
-    method: 'POST',
-    body: JSON.stringify({ body }),
-  });
-
-  forumReplyBody.value = '';
-  await loadThread(selectedThreadId);
-});
-
-forumLoginForm?.addEventListener('submit', async (event) => {
-  event.preventDefault();
-
   try {
-    const login = forumLoginIdentity.value.trim();
-    const password = forumLoginPassword.value;
-
-    await apiFetch('/auth/login', {
+    const body = forumReplyBody.value.trim();
+    await apiFetch(`/api/forum/threads/${selectedThreadId}/posts`, {
       method: 'POST',
-      body: JSON.stringify({ login, password }),
+      body: JSON.stringify({ body }),
     });
 
-    forumLoginPassword.value = '';
-    forumLoginNote.textContent = 'Login erfolgreich.';
-    await renderAuthState();
-    if (currentUser && ['owner', 'admin'].includes(currentUser.role)) {
-      await loadAdminUsers();
-    }
-    await loadThreads();
+    forumReplyBody.value = '';
+    forumReplyFormNote.textContent = 'Antwort erfolgreich gepostet.';
+    showForumToast('Antwort erfolgreich gepostet', 'success');
+    await loadThread(selectedThreadId);
   } catch (error) {
-    forumLoginNote.textContent = error.message;
-  }
-});
-
-forumRegisterForm?.addEventListener('submit', async (event) => {
-  event.preventDefault();
-
-  try {
-    const username = forumRegisterUsername.value.trim();
-    const displayName = forumRegisterDisplay.value.trim();
-    const email = forumRegisterEmail.value.trim();
-    const password = forumRegisterPassword.value;
-
-    await apiFetch('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ username, displayName, email, password }),
-    });
-
-    forumRegisterPassword.value = '';
-    forumRegisterNote.textContent = 'Registrierung erfolgreich. Du bist jetzt eingeloggt.';
-    await renderAuthState();
-    if (currentUser && ['owner', 'admin'].includes(currentUser.role)) {
-      await loadAdminUsers();
-    }
-    await loadThreads();
-  } catch (error) {
-    forumRegisterNote.textContent = error.message;
+    forumReplyFormNote.textContent = error.message;
+    showForumToast(error.message, 'error');
   }
 });
 
@@ -348,11 +368,16 @@ forumRegisterForm?.addEventListener('submit', async (event) => {
   try {
     revealForumSections();
     await renderAuthState();
+    if (!currentUser) {
+      redirectToLogin();
+      return;
+    }
     if (currentUser && ['owner', 'admin'].includes(currentUser.role)) {
       await loadAdminUsers();
     }
     await loadThreads();
   } catch (error) {
     forumThreadDetail.innerHTML = `<p class="forum-empty">${escapeHtml(error.message)}</p>`;
+    showForumToast(error.message, 'error');
   }
 })();

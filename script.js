@@ -1,11 +1,12 @@
 const menuToggle = document.querySelector('.menu-toggle');
 const mainNav = document.querySelector('.main-nav');
 const revealSections = document.querySelectorAll('.section-reveal');
-const yearNode = document.getElementById('year');
+const yearNodes = document.querySelectorAll('.footer-year, #year');
 const briefingScreen = document.getElementById('briefing-screen');
 const briefingEnter = document.getElementById('briefing-enter');
 const briefingCrawlCopy = document.getElementById('briefing-crawl-copy');
 const briefingSoundToggle = document.getElementById('briefing-sound-toggle');
+const briefingPersistToggle = document.getElementById('briefing-persist-toggle');
 const briefingAudioHint = document.getElementById('briefing-audio-hint');
 const briefingMusic = document.getElementById('briefing-music');
 const navDropdown = document.querySelector('.nav-dropdown');
@@ -52,6 +53,7 @@ let scrollSpySection = null;
 let scrollSpyRaf = null;
 const THEME_STORAGE_KEY = 'stormcorps36_theme';
 const FILTER_STORAGE_KEY = 'stormcorps36_filters';
+const INTRO_SKIP_STORAGE_KEY = 'stormcorps36_intro_skip';
 let filterDebounceTimer = null;
 let lastFilterState = {};
 let currentSortBy = 'name'; // 'name', 'rank', 'squad', 'status'
@@ -385,6 +387,26 @@ const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const normalizeTheme = (theme) => {
   const key = toFilterKey(theme);
   return key === 'cinematic' ? 'cinematic' : 'tactical';
+};
+
+const getIntroSkipPreference = () => {
+  try {
+    return window.localStorage.getItem(INTRO_SKIP_STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
+const setIntroSkipPreference = (enabled) => {
+  try {
+    if (enabled) {
+      window.localStorage.setItem(INTRO_SKIP_STORAGE_KEY, '1');
+    } else {
+      window.localStorage.removeItem(INTRO_SKIP_STORAGE_KEY);
+    }
+  } catch {
+    // Ignore storage restrictions.
+  }
 };
 
 const iconSvg = (icon, label) => {
@@ -1264,19 +1286,72 @@ initPageTransitions();
 syncHeaderState();
 requestScrollSpyUpdate();
 
-if (yearNode) {
-  yearNode.textContent = new Date().getFullYear();
+if (yearNodes.length > 0) {
+  const currentYear = String(new Date().getFullYear());
+  yearNodes.forEach((node) => {
+    node.textContent = currentYear;
+  });
 }
 
-if (briefingScreen && briefingEnter) {
+const shouldSkipIntroByPreference = briefingScreen && getIntroSkipPreference();
+if (shouldSkipIntroByPreference) {
+  briefingScreen.classList.add('hidden');
+  document.body.classList.remove('intro-active');
+}
+
+if (briefingScreen && briefingEnter && !shouldSkipIntroByPreference) {
   let briefingHideTimer = null;
   let briefingExitTimer = null;
   let briefingMusicTimer = null;
   let briefingMusicFadeTimer = null;
+  let briefingMusicDuckTimer = null;
   let briefingMusicStarted = false;
   let briefingMusicRetryBound = false;
   let briefingSfxEnabled = false;
   let briefingAudioContext = null;
+  let briefingKeydownBound = false;
+  let briefingPersistEnabled = getIntroSkipPreference();
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const parseTimeValueToMs = (timeValue) => {
+    const raw = String(timeValue ?? '').trim();
+    if (!raw) {
+      return 0;
+    }
+
+    if (raw.endsWith('ms')) {
+      return Number.parseFloat(raw) || 0;
+    }
+
+    if (raw.endsWith('s')) {
+      return (Number.parseFloat(raw) || 0) * 1000;
+    }
+
+    return Number.parseFloat(raw) || 0;
+  };
+
+  const getBriefingAutoHideMs = () => {
+    if (prefersReducedMotion) {
+      return 9000;
+    }
+
+    if (!briefingCrawlCopy) {
+      return 36000;
+    }
+
+    const computed = window.getComputedStyle(briefingCrawlCopy);
+    const durations = computed.animationDuration
+      .split(',')
+      .map((value) => parseTimeValueToMs(value));
+    const maxDuration = Math.max(...durations, 0);
+
+    if (maxDuration <= 0) {
+      return 36000;
+    }
+
+    return Math.ceil(maxDuration + 650);
+  };
 
   const setBriefingAudioHintVisible = (isVisible) => {
     if (!briefingAudioHint) {
@@ -1286,15 +1361,38 @@ if (briefingScreen && briefingEnter) {
     briefingAudioHint.hidden = !isVisible;
   };
 
+  const syncBriefingPersistToggle = () => {
+    if (!briefingPersistToggle) {
+      return;
+    }
+
+    briefingPersistToggle.setAttribute('aria-pressed', String(briefingPersistEnabled));
+    briefingPersistToggle.textContent = briefingPersistEnabled ? 'AUTO-SKIP: AN' : 'AUTO-SKIP: AUS';
+  };
+
+  const clearBriefingMusicTimers = () => {
+    if (briefingMusicFadeTimer) {
+      window.clearInterval(briefingMusicFadeTimer);
+      briefingMusicFadeTimer = null;
+    }
+
+    if (briefingMusicDuckTimer) {
+      window.clearInterval(briefingMusicDuckTimer);
+      briefingMusicDuckTimer = null;
+    }
+
+    if (briefingMusicTimer) {
+      window.clearTimeout(briefingMusicTimer);
+      briefingMusicTimer = null;
+    }
+  };
+
   const stopBriefingMusic = () => {
     if (!briefingMusic) {
       return;
     }
 
-    if (briefingMusicFadeTimer) {
-      window.clearInterval(briefingMusicFadeTimer);
-      briefingMusicFadeTimer = null;
-    }
+    clearBriefingMusicTimers();
 
     briefingMusic.volume = 1;
     briefingMusic.pause();
@@ -1302,12 +1400,51 @@ if (briefingScreen && briefingEnter) {
     briefingMusicStarted = false;
     setBriefingAudioHintVisible(false);
 
-    if (briefingMusicTimer) {
-      window.clearTimeout(briefingMusicTimer);
-      briefingMusicTimer = null;
+    briefingMusicRetryBound = false;
+  };
+
+  const duckAndStopBriefingMusic = (duckDurationMs = 420, floorVolume = 0.04) => {
+    if (!briefingMusic) {
+      return;
     }
 
-    briefingMusicRetryBound = false;
+    if (briefingMusic.paused) {
+      stopBriefingMusic();
+      return;
+    }
+
+    clearBriefingMusicTimers();
+
+    const startVolume = Number.isFinite(briefingMusic.volume) ? briefingMusic.volume : 1;
+    const targetVolume = Math.max(0, Math.min(1, floorVolume));
+    const durationMs = Math.max(120, duckDurationMs);
+    const stepMs = 24;
+    const totalSteps = Math.max(1, Math.ceil(durationMs / stepMs));
+    const deltaPerStep = (startVolume - targetVolume) / totalSteps;
+    let steps = 0;
+
+    briefingMusicDuckTimer = window.setInterval(() => {
+      if (!briefingMusic || briefingMusic.paused) {
+        if (briefingMusicDuckTimer) {
+          window.clearInterval(briefingMusicDuckTimer);
+          briefingMusicDuckTimer = null;
+        }
+        stopBriefingMusic();
+        return;
+      }
+
+      steps += 1;
+      const nextVolume = Math.max(targetVolume, startVolume - (deltaPerStep * steps));
+      briefingMusic.volume = nextVolume;
+
+      if (steps >= totalSteps || nextVolume <= targetVolume) {
+        if (briefingMusicDuckTimer) {
+          window.clearInterval(briefingMusicDuckTimer);
+          briefingMusicDuckTimer = null;
+        }
+        stopBriefingMusic();
+      }
+    }, stepMs);
   };
 
   const startBriefingMusic = async () => {
@@ -1316,10 +1453,7 @@ if (briefingScreen && briefingEnter) {
     }
 
     try {
-      if (briefingMusicFadeTimer) {
-        window.clearInterval(briefingMusicFadeTimer);
-        briefingMusicFadeTimer = null;
-      }
+      clearBriefingMusicTimers();
 
       briefingMusic.currentTime = 0;
       briefingMusic.volume = 0;
@@ -1420,7 +1554,11 @@ if (briefingScreen && briefingEnter) {
       return;
     }
 
-    stopBriefingMusic();
+    if (reason === 'skip') {
+      duckAndStopBriefingMusic(420, 0.04);
+    } else {
+      stopBriefingMusic();
+    }
     document.body.classList.add('intro-exit');
     briefingScreen.classList.add('hidden');
     playBriefingSfx(reason === 'skip' ? 'skip' : 'close');
@@ -1439,11 +1577,53 @@ if (briefingScreen && briefingEnter) {
       document.body.classList.remove('intro-exit');
       setBriefingAudioHintVisible(false);
     }, 460);
+
+    if (briefingKeydownBound) {
+      document.removeEventListener('keydown', handleBriefingKeydown);
+      briefingKeydownBound = false;
+    }
+  };
+
+  const toggleBriefingSfx = () => {
+    if (!briefingSoundToggle) {
+      return;
+    }
+
+    briefingSfxEnabled = !briefingSfxEnabled;
+    briefingSoundToggle.setAttribute('aria-pressed', String(briefingSfxEnabled));
+    briefingSoundToggle.textContent = briefingSfxEnabled ? 'SFX: ON' : 'SFX: OFF';
+    playBriefingSfx('skip');
+  };
+
+  const handleBriefingKeydown = (event) => {
+    if (briefingScreen.classList.contains('hidden')) {
+      return;
+    }
+
+    const key = event.key.toLowerCase();
+    if (key === 'escape') {
+      event.preventDefault();
+      hideBriefing('skip');
+      return;
+    }
+
+    if (key === 's') {
+      event.preventDefault();
+      toggleBriefingSfx();
+      return;
+    }
+
+    if (key === 'i') {
+      event.preventDefault();
+      briefingPersistEnabled = !briefingPersistEnabled;
+      setIntroSkipPreference(briefingPersistEnabled);
+      syncBriefingPersistToggle();
+    }
   };
 
   if (briefingCrawlCopy) {
     briefingCrawlCopy.addEventListener('animationend', () => hideBriefing('auto'), { once: true });
-    briefingHideTimer = window.setTimeout(() => hideBriefing('auto'), 36000);
+    briefingHideTimer = window.setTimeout(() => hideBriefing('auto'), getBriefingAutoHideMs());
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
         void startBriefingMusic();
@@ -1451,15 +1631,27 @@ if (briefingScreen && briefingEnter) {
     });
   }
 
+  briefingEnter.setAttribute('aria-keyshortcuts', 'Escape');
+  if (briefingSoundToggle) {
+    briefingSoundToggle.setAttribute('aria-keyshortcuts', 'S');
+  }
+  if (briefingPersistToggle) {
+    briefingPersistToggle.setAttribute('aria-keyshortcuts', 'I');
+    briefingPersistToggle.addEventListener('click', () => {
+      briefingPersistEnabled = !briefingPersistEnabled;
+      setIntroSkipPreference(briefingPersistEnabled);
+      syncBriefingPersistToggle();
+    });
+  }
+  syncBriefingPersistToggle();
+
+  document.addEventListener('keydown', handleBriefingKeydown);
+  briefingKeydownBound = true;
+
   briefingEnter.addEventListener('click', () => hideBriefing('skip'));
 
   if (briefingSoundToggle) {
-    briefingSoundToggle.addEventListener('click', () => {
-      briefingSfxEnabled = !briefingSfxEnabled;
-      briefingSoundToggle.setAttribute('aria-pressed', String(briefingSfxEnabled));
-      briefingSoundToggle.textContent = briefingSfxEnabled ? 'SFX: ON' : 'SFX: OFF';
-      playBriefingSfx('skip');
-    });
+    briefingSoundToggle.addEventListener('click', toggleBriefingSfx);
   }
 }
 

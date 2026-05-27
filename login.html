@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | 36th Storm Corps</title>
+  <meta name="description" content="Login zum gesicherten 36th Storm Corps Portal fuer Forum und interne Module." />
+  <meta name="theme-color" content="#020305" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="36th Storm Corps" />
+  <meta property="og:title" content="Login | 36th Storm Corps" />
+  <meta property="og:description" content="Login zum gesicherten 36th Storm Corps Portal fuer Forum und interne Module." />
+  <meta property="og:image" content="90b2f19b-4dfd-48df-9bec-dfad5390eb02.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Login | 36th Storm Corps" />
+  <meta name="twitter:description" content="Login zum gesicherten 36th Storm Corps Portal fuer Forum und interne Module." />
+  <meta name="twitter:image" content="90b2f19b-4dfd-48df-9bec-dfad5390eb02.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="page-auth">
+  <div class="noise" aria-hidden="true"></div>
+  <div class="auth-ambient" aria-hidden="true"></div>
+
+  <header class="auth-topbar" aria-hidden="true">
+    <span class="auth-topbar-item">Republic Secure Portal</span>
+    <span class="auth-topbar-sep"></span>
+    <span class="auth-topbar-item">Clearance: Aurek-36</span>
+    <span class="auth-topbar-sep"></span>
+    <span class="auth-topbar-item">Ende-zu-Ende verschluesselt</span>
+  </header>
+
+  <div class="auth-page-wrap">
+    <div class="auth-card">
+
+      <a href="index.html" class="auth-brand" aria-label="Zur Hauptseite">
+        <span class="brand-mark">36</span>
+        <span class="brand-text">STORM CORPS</span>
+      </a>
+
+      <div class="auth-card-header">
+        <p class="auth-security-badge" aria-label="Verbindungsstatus"><span class="auth-security-dot"></span>Secure Connection</p>
+        <p class="eyebrow">Secure Access</p>
+        <h1 class="auth-title">Portal Login</h1>
+        <p class="auth-subtitle">Melde dich mit deinem Account an, um auf das Einheitsforum zuzugreifen.</p>
+      </div>
+
+      <form id="login-form" class="auth-form" novalidate>
+        <div class="auth-field">
+          <label for="login-identity">Username oder E-Mail</label>
+          <input
+            id="login-identity"
+            type="text"
+            maxlength="120"
+            placeholder="commander36 oder name@mail.de"
+            autocomplete="username"
+            required
+          />
+        </div>
+        <div class="auth-field">
+          <label for="login-password">Passwort</label>
+          <div class="auth-password-wrap">
+            <input
+              id="login-password"
+              type="password"
+              maxlength="160"
+              placeholder="Mindestens 8 Zeichen"
+              autocomplete="current-password"
+              required
+            />
+            <button
+              type="button"
+              class="auth-pass-toggle"
+              data-toggle-password="login-password"
+              aria-label="Passwort anzeigen"
+              aria-pressed="false"
+            >Anzeigen</button>
+          </div>
+        </div>
+        <p class="auth-note" id="login-note" aria-live="polite"></p>
+        <button class="btn btn-primary auth-submit" type="submit">Einloggen</button>
+      </form>
+
+      <div class="auth-divider"><span>oder</span></div>
+
+      <p class="auth-switch">Noch kein Account? <a href="register.html" id="switch-register-link">Jetzt registrieren</a></p>
+      <a href="forum.html" class="auth-back">← Zurück zum Forum</a>
+
+    </div>
+  </div>
+
+  <div id="toast-root" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
+
+  <script>
+    const getSafeRedirectTarget = (fallback = 'forum.html') => {
+      const raw = new URLSearchParams(window.location.search).get('redirect') || '';
+      if (!raw) return fallback;
+
+      try {
+        const decoded = decodeURIComponent(raw).trim();
+        if (!decoded) return fallback;
+        if (decoded.startsWith('http://') || decoded.startsWith('https://') || decoded.startsWith('//')) return fallback;
+        if (decoded.includes('..') || decoded.includes('\\')) return fallback;
+        return decoded;
+      } catch (_) {
+        return fallback;
+      }
+    };
+
+    const toastRoot = document.getElementById('toast-root');
+    const showToast = (message, type = 'info') => {
+      if (!toastRoot || !message) return;
+      const toast = document.createElement('div');
+      toast.className = `toast toast--${type}`;
+      toast.textContent = message;
+      toastRoot.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.add('is-visible'));
+      window.setTimeout(() => {
+        toast.classList.remove('is-visible');
+        window.setTimeout(() => toast.remove(), 220);
+      }, 2600);
+    };
+
+    const redirectTarget = getSafeRedirectTarget('forum.html');
+    const switchRegisterLink = document.getElementById('switch-register-link');
+    if (switchRegisterLink && redirectTarget) {
+      switchRegisterLink.href = `register.html?redirect=${encodeURIComponent(redirectTarget)}`;
+    }
+
+    document.querySelectorAll('[data-toggle-password]').forEach((toggle) => {
+      toggle.addEventListener('click', () => {
+        const fieldId = toggle.getAttribute('data-toggle-password');
+        const input = fieldId ? document.getElementById(fieldId) : null;
+        if (!input) return;
+
+        const showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        toggle.textContent = showing ? 'Anzeigen' : 'Verbergen';
+        toggle.setAttribute('aria-pressed', showing ? 'false' : 'true');
+        toggle.setAttribute('aria-label', showing ? 'Passwort anzeigen' : 'Passwort verbergen');
+      });
+    });
+
+    (async () => {
+      try {
+        const res = await fetch('/api/me', { credentials: 'same-origin' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.user) {
+            window.location.replace(redirectTarget);
+          }
+        }
+      } catch (_) {}
+    })();
+
+    const form = document.getElementById('login-form');
+    const note = document.getElementById('login-note');
+    const submitBtn = form.querySelector('[type="submit"]');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const login = document.getElementById('login-identity').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      note.textContent = '';
+      note.className = 'auth-note';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Einloggen…';
+
+      try {
+        const res = await fetch('/auth/login', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login, password }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          throw new Error(data.error || `Fehler ${res.status}`);
+        }
+
+        note.textContent = 'Login erfolgreich. Weiterleitung…';
+        note.className = 'auth-note auth-note--success';
+        showToast('Login erfolgreich', 'success');
+        document.getElementById('login-password').value = '';
+
+        window.location.replace(redirectTarget);
+      } catch (err) {
+        note.textContent = err.message;
+        note.className = 'auth-note auth-note--error';
+        showToast(err.message, 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Einloggen';
+      }
+    });
+  </script>
+</body>
+</html>
