@@ -19,6 +19,8 @@ const forumUserList = document.getElementById('forum-user-list');
 const forumAdminNote = document.getElementById('forum-admin-note');
 const forumAdminRefresh = document.getElementById('forum-admin-refresh');
 const forumRevealSections = document.querySelectorAll('.section-reveal');
+const forumThreadSubmitBtn = forumThreadForm?.querySelector('[type="submit"]');
+const forumReplySubmitBtn = forumReplyForm?.querySelector('[type="submit"]');
 
 let selectedThreadId = null;
 let currentUser = null;
@@ -54,6 +56,21 @@ const showForumToast = (message, type = 'info') => {
     toast.classList.remove('is-visible');
     window.setTimeout(() => toast.remove(), 220);
   }, 2600);
+};
+
+const setBusyState = (button, busy, busyLabel) => {
+  if (!button) {
+    return;
+  }
+
+  if (!button.dataset.defaultLabel) {
+    button.dataset.defaultLabel = button.textContent.trim();
+  }
+
+  button.disabled = Boolean(busy);
+  button.classList.toggle('is-busy', Boolean(busy));
+  button.setAttribute('aria-busy', busy ? 'true' : 'false');
+  button.textContent = busy ? (busyLabel || button.dataset.defaultLabel) : button.dataset.defaultLabel;
 };
 
 const currentForumLocation = () => {
@@ -301,25 +318,35 @@ const loadAdminUsers = async () => {
 };
 
 forumRefreshBtn?.addEventListener('click', async () => {
+  setBusyState(forumRefreshBtn, true, 'Aktualisiere...');
   try {
     await loadThreads();
     showForumToast('Threads aktualisiert', 'success');
   } catch (error) {
     showForumToast(error.message, 'error');
+  } finally {
+    setBusyState(forumRefreshBtn, false);
   }
 });
 
 forumAdminRefresh?.addEventListener('click', async () => {
-  await loadAdminUsers();
+  setBusyState(forumAdminRefresh, true, 'Lade...');
+  try {
+    await loadAdminUsers();
+  } finally {
+    setBusyState(forumAdminRefresh, false);
+  }
 });
 
 forumLogoutBtn?.addEventListener('click', async () => {
+  setBusyState(forumLogoutBtn, true, 'Melde ab...');
   try {
     await apiFetch('/auth/logout', { method: 'POST' });
     redirectToLogin();
   } catch (error) {
     forumAuthState.textContent = error.message;
     showForumToast(error.message, 'error');
+    setBusyState(forumLogoutBtn, false);
   }
 });
 
@@ -333,6 +360,14 @@ forumThreadForm?.addEventListener('submit', async (event) => {
 
   const title = forumThreadTitle.value.trim();
   const body = forumThreadBody.value.trim();
+
+  if (!title || !body) {
+    forumThreadFormNote.textContent = 'Bitte Titel und Inhalt ausfuellen.';
+    showForumToast('Titel und Inhalt sind erforderlich.', 'error');
+    return;
+  }
+
+  setBusyState(forumThreadSubmitBtn, true, 'Posting...');
 
   try {
     await apiFetch('/api/forum/threads', {
@@ -348,6 +383,8 @@ forumThreadForm?.addEventListener('submit', async (event) => {
   } catch (error) {
     forumThreadFormNote.textContent = error.message;
     showForumToast(error.message, 'error');
+  } finally {
+    setBusyState(forumThreadSubmitBtn, false);
   }
 });
 
@@ -366,6 +403,15 @@ forumReplyForm?.addEventListener('submit', async (event) => {
 
   try {
     const body = forumReplyBody.value.trim();
+
+    if (!body) {
+      forumReplyFormNote.textContent = 'Bitte eine Antwort eingeben.';
+      showForumToast('Antwort darf nicht leer sein.', 'error');
+      return;
+    }
+
+    setBusyState(forumReplySubmitBtn, true, 'Sende...');
+
     await apiFetch(`/api/forum/threads/${selectedThreadId}/posts`, {
       method: 'POST',
       body: JSON.stringify({ body }),
@@ -378,6 +424,8 @@ forumReplyForm?.addEventListener('submit', async (event) => {
   } catch (error) {
     forumReplyFormNote.textContent = error.message;
     showForumToast(error.message, 'error');
+  } finally {
+    setBusyState(forumReplySubmitBtn, false);
   }
 });
 

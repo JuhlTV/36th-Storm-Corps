@@ -255,6 +255,7 @@
       note.textContent = '';
       note.className = 'auth-note';
       submitBtn.disabled = true;
+      submitBtn.setAttribute('aria-busy', 'true');
       submitBtn.textContent = 'Erstellen…';
 
       try {
@@ -264,6 +265,10 @@
 
         if (!displayName || displayName.length < 2) {
           throw new Error('Bitte einen gueltigen Anzeigenamen eingeben.');
+        }
+
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          throw new Error('Bitte eine gueltige E-Mail-Adresse angeben oder das Feld leer lassen.');
         }
 
         if (password.length < 8) {
@@ -303,6 +308,7 @@
         note.className = 'auth-note auth-note--error';
         showToast(err.message, 'error');
         submitBtn.disabled = false;
+        submitBtn.setAttribute('aria-busy', 'false');
         submitBtn.textContent = 'Account erstellen';
       }
     });

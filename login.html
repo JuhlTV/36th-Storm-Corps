@@ -181,6 +181,7 @@
       note.textContent = '';
       note.className = 'auth-note';
       submitBtn.disabled = true;
+      submitBtn.setAttribute('aria-busy', 'true');
       submitBtn.textContent = 'Einloggen…';
 
       try {
@@ -211,6 +212,7 @@
         note.className = 'auth-note auth-note--error';
         showToast(err.message, 'error');
         submitBtn.disabled = false;
+        submitBtn.setAttribute('aria-busy', 'false');
         submitBtn.textContent = 'Einloggen';
       }
     });
