@@ -11,7 +11,7 @@ const normalizeLogin = (value) => String(value || '').trim().toLowerCase();
 
 const getEncryptionKey = () => {
   const source = process.env.AUTH_ENCRYPTION_KEY || process.env.SESSION_SECRET;
-  if (!source || String(source).trim().length < 16) {
+  if (!source || !String(source).trim()) {
     throw new Error('AUTH_ENCRYPTION_KEY or SESSION_SECRET must be set for encrypted auth store');
   }
 
