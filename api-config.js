@@ -1,36 +1,45 @@
 (function () {
   const API_BASE_STORAGE_KEY = 'stormcorps36_api_base';
-  const DEFAULT_API_BASES = [
+  const DISABLED_API_BASES = [
     'https://36th-storm-corps-production.up.railway.app',
+  ];
+  const DEFAULT_API_BASES = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
   ];
 
   const unique = (values) => Array.from(new Set(values.filter(Boolean)));
+  const isDisabledBase = (value) => {
+    const normalized = String(value || '').trim().replace(/\/$/, '');
+    return DISABLED_API_BASES.some((blocked) => normalized === blocked.replace(/\/$/, ''));
+  };
 
   const getApiCandidates = (extraBases) => {
     const candidates = [];
 
     try {
       const stored = window.localStorage.getItem(API_BASE_STORAGE_KEY);
-      if (stored) {
+      if (stored && isDisabledBase(stored)) {
+        window.localStorage.removeItem(API_BASE_STORAGE_KEY);
+      } else if (stored) {
         candidates.push(stored.trim());
       }
     } catch (_) {
       // Ignore storage restrictions.
     }
 
+    candidates.push(...DEFAULT_API_BASES);
+
     if (window.location.origin && window.location.origin !== 'null') {
+      // Keep same-origin as a fallback, but prefer explicit backend hosts first.
       candidates.push(window.location.origin);
     }
-
-    candidates.push(...DEFAULT_API_BASES);
 
     if (Array.isArray(extraBases) && extraBases.length) {
       candidates.push(...extraBases);
     }
 
-    return unique(candidates);
+    return unique(candidates).filter((base) => !isDisabledBase(base));
   };
 
   const withApiBase = (base, route) => {
@@ -77,6 +86,7 @@
 
   window.StormCorpsApi = {
     API_BASE_STORAGE_KEY,
+    DISABLED_API_BASES,
     DEFAULT_API_BASES,
     getApiCandidates,
     withApiBase,

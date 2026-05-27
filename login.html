@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="design-refresh.css" />
 </head>
-<body class="page-auth">
+<body class="page-auth page-auth-login">
   <div class="noise" aria-hidden="true"></div>
   <div class="auth-ambient" aria-hidden="true"></div>
 
@@ -46,6 +46,11 @@
         <p class="eyebrow">Secure Access</p>
         <h1 class="auth-title">Portal Login</h1>
         <p class="auth-subtitle">Melde dich mit deinem Account an, um auf das Einheitsforum zuzugreifen.</p>
+        <div class="auth-trust-row" aria-label="Sicherheitsmerkmale">
+          <span class="auth-trust-chip">Session Guard</span>
+          <span class="auth-trust-chip">Encrypted Store</span>
+          <span class="auth-trust-chip">Role Sync</span>
+        </div>
       </div>
 
       <form id="login-form" class="auth-form" novalidate>
@@ -59,6 +64,7 @@
             autocomplete="username"
             required
           />
+          <small class="auth-hint">Nutze denselben Login wie bei der Registrierung.</small>
         </div>
         <div class="auth-field">
           <label for="login-password">Passwort</label>
@@ -82,6 +88,7 @@
         </div>
         <p class="auth-note" id="login-note" aria-live="polite"></p>
         <button class="btn btn-primary auth-submit" type="submit">Einloggen</button>
+        <p class="auth-inline-meta">Nach erfolgreichem Login wirst du automatisch zum Zielbereich weitergeleitet.</p>
       </form>
 
       <div class="auth-divider"><span>oder</span></div>
@@ -177,6 +184,10 @@
       submitBtn.textContent = 'Einloggen…';
 
       try {
+        if (!login || !password) {
+          throw new Error('Bitte Username/E-Mail und Passwort eingeben.');
+        }
+
         const res = await apiFetch('/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

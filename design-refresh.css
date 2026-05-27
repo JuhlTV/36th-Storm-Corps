@@ -410,6 +410,67 @@ p,
   margin: 7.5rem auto 3rem;
 }
 
+.page-auth-login .auth-card,
+.page-auth-register .auth-card {
+  max-width: 560px;
+  border-radius: 1.2rem;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.48);
+}
+
+.auth-card-header {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.78rem;
+}
+
+.auth-hint {
+  display: block;
+  margin-top: 0.3rem;
+  color: #91a7bd;
+  font-size: 0.76rem;
+  letter-spacing: 0.03em;
+}
+
+.auth-inline-meta {
+  margin: 0.3rem 0 0;
+  color: #9cb5cc;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.auth-trust-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+  margin-top: 0.35rem;
+}
+
+.auth-trust-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(111, 233, 248, 0.23);
+  border-radius: 999px;
+  background: rgba(4, 11, 17, 0.72);
+  color: #d7f4ff;
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.22rem 0.52rem;
+}
+
+.auth-pass-toggle {
+  min-width: 5.1rem;
+}
+
+.page-auth .auth-submit {
+  margin-top: 0.25rem;
+}
+
 .auth-field input,
 .auth-field textarea,
 .auth-password-wrap input,
@@ -569,5 +630,9 @@ p,
 
   .auth-card {
     margin-top: 6.4rem;
+  }
+
+  .auth-trust-chip {
+    width: 100%;
   }
 }

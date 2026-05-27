@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="design-refresh.css" />
 </head>
-<body class="page-auth">
+<body class="page-auth page-auth-register">
   <div class="noise" aria-hidden="true"></div>
   <div class="auth-ambient" aria-hidden="true"></div>
 
@@ -46,6 +46,11 @@
         <p class="eyebrow">Neue Registrierung</p>
         <h1 class="auth-title">Account erstellen</h1>
         <p class="auth-subtitle">Werde Teil des Corps und erhalte Zugang zum internen Einheitsforum.</p>
+        <div class="auth-trust-row" aria-label="Sicherheitsmerkmale">
+          <span class="auth-trust-chip">Username Guard</span>
+          <span class="auth-trust-chip">Role Bootstrap</span>
+          <span class="auth-trust-chip">Session Ready</span>
+        </div>
       </div>
 
       <form id="register-form" class="auth-form" novalidate>
@@ -59,6 +64,7 @@
             autocomplete="username"
             required
           />
+          <small class="auth-hint">3-32 Zeichen, erlaubt sind Buchstaben, Zahlen sowie . _ -</small>
         </div>
         <div class="auth-field">
           <label for="reg-display">Anzeigename</label>
@@ -70,6 +76,7 @@
             autocomplete="name"
             required
           />
+          <small class="auth-hint">Dieser Name wird im Forum bei Threads und Antworten angezeigt.</small>
         </div>
         <div class="auth-field">
           <label for="reg-email">E-Mail <span class="auth-optional">(optional)</span></label>
@@ -101,6 +108,27 @@
             >Anzeigen</button>
           </div>
         </div>
+        <div class="auth-field">
+          <label for="reg-password-confirm">Passwort wiederholen</label>
+          <div class="auth-password-wrap">
+            <input
+              id="reg-password-confirm"
+              type="password"
+              maxlength="160"
+              placeholder="Passwort erneut eingeben"
+              autocomplete="new-password"
+              required
+            />
+            <button
+              type="button"
+              class="auth-pass-toggle"
+              data-toggle-password="reg-password-confirm"
+              aria-label="Passwort anzeigen"
+              aria-pressed="false"
+            >Anzeigen</button>
+          </div>
+        </div>
+        <p class="auth-inline-meta" id="register-password-status" aria-live="polite">Passwortstaerke: -</p>
         <p class="auth-note" id="register-note" aria-live="polite"></p>
         <button class="btn btn-primary auth-submit" type="submit">Account erstellen</button>
       </form>
@@ -186,6 +214,35 @@
     const form = document.getElementById('register-form');
     const note = document.getElementById('register-note');
     const submitBtn = form.querySelector('[type="submit"]');
+    const passwordInput = document.getElementById('reg-password');
+    const passwordConfirmInput = document.getElementById('reg-password-confirm');
+    const passwordStatus = document.getElementById('register-password-status');
+
+    const getPasswordStrength = (password) => {
+      let score = 0;
+      if (password.length >= 8) score += 1;
+      if (/[A-Z]/.test(password)) score += 1;
+      if (/[a-z]/.test(password)) score += 1;
+      if (/\d/.test(password)) score += 1;
+      if (/[^A-Za-z0-9]/.test(password)) score += 1;
+
+      if (score <= 2) return 'niedrig';
+      if (score <= 4) return 'mittel';
+      return 'hoch';
+    };
+
+    const updatePasswordStatus = () => {
+      if (!passwordStatus || !passwordInput) return;
+      const pwd = passwordInput.value;
+      if (!pwd) {
+        passwordStatus.textContent = 'Passwortstaerke: -';
+        return;
+      }
+      passwordStatus.textContent = `Passwortstaerke: ${getPasswordStrength(pwd)}`;
+    };
+
+    passwordInput?.addEventListener('input', updatePasswordStatus);
+    updatePasswordStatus();
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -193,6 +250,7 @@
       const displayName = document.getElementById('reg-display').value.trim();
       const email = document.getElementById('reg-email').value.trim();
       const password = document.getElementById('reg-password').value;
+      const passwordConfirm = passwordConfirmInput.value;
 
       note.textContent = '';
       note.className = 'auth-note';
@@ -200,6 +258,26 @@
       submitBtn.textContent = 'Erstellen…';
 
       try {
+        if (!/^[A-Za-z0-9._-]{3,32}$/.test(username)) {
+          throw new Error('Username muss 3-32 Zeichen haben (Buchstaben, Zahlen, . _ -).');
+        }
+
+        if (!displayName || displayName.length < 2) {
+          throw new Error('Bitte einen gueltigen Anzeigenamen eingeben.');
+        }
+
+        if (password.length < 8) {
+          throw new Error('Passwort muss mindestens 8 Zeichen lang sein.');
+        }
+
+        if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+          throw new Error('Passwort muss mindestens einen Buchstaben und eine Zahl enthalten.');
+        }
+
+        if (password !== passwordConfirm) {
+          throw new Error('Die Passwoerter stimmen nicht ueberein.');
+        }
+
         const res = await apiFetch('/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -216,6 +294,8 @@
         note.className = 'auth-note auth-note--success';
         showToast('Registrierung erfolgreich', 'success');
         document.getElementById('reg-password').value = '';
+        passwordConfirmInput.value = '';
+        updatePasswordStatus();
 
         window.location.replace(redirectTarget);
       } catch (err) {
