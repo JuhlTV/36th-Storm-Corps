@@ -1,45 +1,72 @@
 (function () {
   const API_BASE_STORAGE_KEY = 'stormcorps36_api_base';
-  const DISABLED_API_BASES = [
-    'https://36th-storm-corps-production.up.railway.app',
-  ];
   const DEFAULT_API_BASES = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
   ];
 
   const unique = (values) => Array.from(new Set(values.filter(Boolean)));
-  const isDisabledBase = (value) => {
-    const normalized = String(value || '').trim().replace(/\/$/, '');
-    return DISABLED_API_BASES.some((blocked) => normalized === blocked.replace(/\/$/, ''));
+  const normalizeBase = (value) => String(value || '').trim().replace(/\/$/, '');
+
+  const isLocalHostname = (hostname) => {
+    const normalized = String(hostname || '').trim().toLowerCase();
+    return normalized === 'localhost' || normalized === '127.0.0.1' || normalized === '[::1]';
+  };
+
+  const isLocalBase = (base) => {
+    try {
+      const parsed = new URL(normalizeBase(base));
+      return isLocalHostname(parsed.hostname);
+    } catch (_) {
+      return false;
+    }
+  };
+
+  const isSameOriginBase = (base) => normalizeBase(base) === normalizeBase(window.location.origin);
+
+  const isBaseAllowedInContext = (base, isLocalContext) => {
+    if (!base) {
+      return false;
+    }
+
+    // Never call localhost from deployed origins to avoid CORS and mixed-context failures.
+    if (!isLocalContext && isLocalBase(base)) {
+      return false;
+    }
+
+    return true;
   };
 
   const getApiCandidates = (extraBases) => {
     const candidates = [];
+    const isLocalContext = window.location.protocol === 'file:' || isLocalHostname(window.location.hostname);
+    const includeLocalDefaults = isLocalContext;
 
     try {
       const stored = window.localStorage.getItem(API_BASE_STORAGE_KEY);
-      if (stored && isDisabledBase(stored)) {
-        window.localStorage.removeItem(API_BASE_STORAGE_KEY);
-      } else if (stored) {
+      if (stored && isBaseAllowedInContext(stored, isLocalContext)) {
         candidates.push(stored.trim());
+      } else if (stored) {
+        window.localStorage.removeItem(API_BASE_STORAGE_KEY);
       }
     } catch (_) {
       // Ignore storage restrictions.
     }
 
-    candidates.push(...DEFAULT_API_BASES);
-
     if (window.location.origin && window.location.origin !== 'null') {
-      // Keep same-origin as a fallback, but prefer explicit backend hosts first.
+      // For deployed environments (Railway), same-origin API is the primary source.
       candidates.push(window.location.origin);
+    }
+
+    if (includeLocalDefaults) {
+      candidates.push(...DEFAULT_API_BASES);
     }
 
     if (Array.isArray(extraBases) && extraBases.length) {
       candidates.push(...extraBases);
     }
 
-    return unique(candidates).filter((base) => !isDisabledBase(base));
+    return unique(candidates).filter((base) => isBaseAllowedInContext(base, isLocalContext));
   };
 
   const withApiBase = (base, route) => {
@@ -70,7 +97,9 @@
         }
 
         try {
-          window.localStorage.setItem(API_BASE_STORAGE_KEY, base);
+          if (isSameOriginBase(base) || isLocalBase(base)) {
+            window.localStorage.setItem(API_BASE_STORAGE_KEY, base);
+          }
         } catch (_) {
           // Ignore storage restrictions.
         }
@@ -86,7 +115,6 @@
 
   window.StormCorpsApi = {
     API_BASE_STORAGE_KEY,
-    DISABLED_API_BASES,
     DEFAULT_API_BASES,
     getApiCandidates,
     withApiBase,
