@@ -444,14 +444,29 @@ app.post('/auth/login', async (req, res, next) => {
     let dbUser = null;
 
     if (authAccount && authAccount.passwordHash) {
-      const passwordValid = await bcrypt.compare(password, authAccount.passwordHash);
-      if (!passwordValid) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-
       dbUser = findUserById(authAccount.userId);
       if (!dbUser) {
         return res.status(401).json({ error: 'Account not found' });
+      }
+
+      let passwordValid = await bcrypt.compare(password, authAccount.passwordHash);
+
+      if (!passwordValid && dbUser.auth_provider === 'local' && dbUser.password_hash) {
+        const dbPasswordValid = await bcrypt.compare(password, dbUser.password_hash);
+        if (dbPasswordValid) {
+          authAccount = syncLocalAccountBestEffort({
+            userId: dbUser.id,
+            username: dbUser.username,
+            email: dbUser.email,
+            passwordHash: dbUser.password_hash,
+            req,
+          }) || authAccount;
+          passwordValid = true;
+        }
+      }
+
+      if (!passwordValid) {
+        return res.status(401).json({ error: 'Invalid credentials' });
       }
 
       if (dbUser.auth_provider === 'local' && !dbUser.password_hash) {
