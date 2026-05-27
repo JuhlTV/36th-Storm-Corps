@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profil | 36th Storm Corps</title>
+  <meta name="description" content="Profilansicht eines Forum-Mitglieds der 36th Storm Corps." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="design-refresh.css" />
+</head>
+<body class="page-forum">
+  <a class="skip-link" href="#main-content">Zum Inhalt springen</a>
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="site-header" id="top">
+    <div class="container nav-wrap">
+      <a href="index.html" class="brand" aria-label="Zur Hauptseite">
+        <span class="brand-mark">36</span>
+        <span class="brand-text">STORM CORPS</span>
+      </a>
+      <nav class="main-nav" aria-label="Profil Navigation">
+        <a href="forum.html">Forum</a>
+        <a href="operations-hub.html">Operations-Hub</a>
+        <a href="lore-codex.html">Lore-Codex</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="forum-hero section-reveal visible">
+      <div class="container">
+        <p class="eyebrow">Forum Profil</p>
+        <h1 id="profile-title">Profil</h1>
+        <p class="lead" id="profile-subtitle">Lade Profildaten...</p>
+        <div class="hero-actions">
+          <a class="btn btn-ghost" href="forum.html">Zurueck zum Forum</a>
+          <button class="btn btn-primary" id="profile-follow-btn" type="button" hidden>Folgen</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="forum-board section-reveal visible">
+      <div class="container forum-grid">
+        <article class="forum-panel">
+          <h2>Profilkarte</h2>
+          <div id="profile-card" class="forum-thread-detail">
+            <p class="forum-empty">Lade...</p>
+          </div>
+        </article>
+
+        <article class="forum-panel">
+          <h2>Forum Aktivitaet</h2>
+          <div id="profile-stats" class="forum-thread-detail">
+            <p class="forum-empty">Lade...</p>
+          </div>
+          <div class="forum-medal-manager" id="profile-medal-manager" hidden>
+            <label>
+              <span>Einheits-Medaillie</span>
+              <select id="profile-medal-select">
+                <option value="">Medaillie waehlen...</option>
+              </select>
+            </label>
+            <div class="forum-profile-actions">
+              <button class="btn btn-ghost" type="button" id="profile-medal-award-btn">Vergabe</button>
+              <button class="btn btn-ghost" type="button" id="profile-medal-revoke-btn">Entzug</button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script src="api-config.js?v=20260527e"></script>
+  <script src="profile.js"></script>
+</body>
+</html>
