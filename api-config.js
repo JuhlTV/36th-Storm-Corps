@@ -79,10 +79,15 @@
   };
 
   const apiFetchRaw = async (route, options = {}, extraBases = []) => {
+    const isLocalContext = window.location.protocol === 'file:' || isLocalHostname(window.location.hostname);
     const candidates = getApiCandidates(extraBases);
     let lastError = null;
 
     for (const base of candidates) {
+      if (!isBaseAllowedInContext(base, isLocalContext)) {
+        continue;
+      }
+
       const requestUrl = withApiBase(base, route);
 
       try {

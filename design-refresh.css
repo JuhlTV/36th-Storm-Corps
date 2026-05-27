@@ -2,20 +2,20 @@
 :root {
   --refresh-surface: rgba(6, 12, 20, 0.78);
   --refresh-surface-strong: rgba(4, 9, 16, 0.9);
-  --refresh-line: rgba(133, 205, 255, 0.24);
-  --refresh-hot: #ff8a64;
-  --refresh-cool: #6fe9f8;
+  --refresh-line: rgba(133, 205, 255, 0.18);
+  --refresh-hot: #d48466;
+  --refresh-cool: #73c9d6;
   --refresh-title: #edf7ff;
   --refresh-text: #a7b5c7;
-  --refresh-ring: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 16px 36px rgba(0, 0, 0, 0.44);
+  --refresh-ring: 0 0 0 1px rgba(255, 255, 255, 0.03), 0 12px 28px rgba(0, 0, 0, 0.36);
 }
 
 body {
   background:
-    radial-gradient(circle at 18% 6%, rgba(111, 233, 248, 0.12), transparent 26%),
-    radial-gradient(circle at 82% 10%, rgba(255, 138, 100, 0.11), transparent 28%),
-    radial-gradient(circle at 50% 110%, rgba(147, 119, 255, 0.07), transparent 34%),
-    linear-gradient(150deg, #02050b 0%, #070f19 45%, #03060c 100%);
+    radial-gradient(circle at 18% 6%, rgba(115, 201, 214, 0.09), transparent 30%),
+    radial-gradient(circle at 82% 10%, rgba(212, 132, 102, 0.07), transparent 32%),
+    radial-gradient(circle at 50% 110%, rgba(147, 119, 255, 0.04), transparent 38%),
+    linear-gradient(150deg, #02050b 0%, #070d16 45%, #03060c 100%);
 }
 
 body::before {
