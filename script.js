@@ -943,6 +943,12 @@ const renderOperations = (operations) => {
     const capacity = Number(op.capacity ?? 0);
     const state = resolveOperationState(date, participants, capacity, now);
     const today = date instanceof Date && !Number.isNaN(date.getTime()) && isSameLocalDay(date, now);
+    const occupancyLabel = capacity > 0
+      ? `${participants}/${capacity} Slots belegt`
+      : `${participants} Teilnehmer eingeplant`;
+    const availabilityLabel = capacity > 0
+      ? `${Math.max(capacity - participants, 0)} freie Plaetze`
+      : 'Kapazitaet offen';
 
     if (today) {
       todayCount += 1;
@@ -953,6 +959,7 @@ const renderOperations = (operations) => {
         <p class="cal-meta">${escapeHtml(today ? `Heute | ${formatOperationDate(date)}` : formatOperationDate(date))}</p>
         <h3>${escapeHtml(op.title ?? 'Unbekannter Einsatz')}</h3>
         <p>${escapeHtml(op.description ?? 'Keine Beschreibung.')}</p>
+        <p class="cal-capacity">${escapeHtml(occupancyLabel)} <span>${escapeHtml(availabilityLabel)}</span></p>
         <span class="cal-state ${operationStateClass(state)}">${operationStateLabel(state)}</span>
       </article>
     `;
