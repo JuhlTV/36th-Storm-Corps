@@ -372,6 +372,15 @@ p,
   opacity: 0.9;
 }
 
+.ops-main {
+  padding-top: 1rem;
+}
+
+.calendar-item-empty {
+  opacity: 0.86;
+  border-style: dashed;
+}
+
 .forum-panel-subtitle {
   margin: 0 0 0.9rem;
   color: #9eb4c7;

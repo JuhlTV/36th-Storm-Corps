@@ -907,7 +907,23 @@ const renderMembers = (members) => {
 };
 
 const renderOperations = (operations) => {
-  if (!calendarList || !Array.isArray(operations) || operations.length === 0) {
+  if (!calendarList) {
+    return;
+  }
+
+  if (!Array.isArray(operations) || operations.length === 0) {
+    calendarList.innerHTML = `
+      <article class="calendar-item calendar-item-empty" data-state="closed">
+        <p class="cal-meta">Keine Eintraege</p>
+        <h3>Keine geplanten Einsaetze</h3>
+        <p>Aktuell sind keine neuen Trainings oder Operationen eingetragen.</p>
+        <span class="cal-state state-closed">Closed</span>
+      </article>
+    `;
+
+    if (sbTodayOps) {
+      sbTodayOps.textContent = '0';
+    }
     return;
   }
 
@@ -948,7 +964,23 @@ const renderOperations = (operations) => {
 };
 
 const renderMedals = (medals) => {
-  if (!medalGrid || !Array.isArray(medals) || medals.length === 0) {
+  if (!medalGrid) {
+    return;
+  }
+
+  if (!Array.isArray(medals) || medals.length === 0) {
+    medalGrid.innerHTML = `
+      <article class="medal-card medal-ribbon ribbon-tier-standard">
+        <div class="medal-ribbon-head">
+          <span class="medal-tier tier-standard">standard</span>
+          <p class="medal-icon">-</p>
+        </div>
+        <div class="medal-ribbon-body">
+          <h3>Keine Auszeichnungen geladen</h3>
+          <p>Sobald Medaillen gepflegt sind, erscheinen sie hier automatisch.</p>
+        </div>
+      </article>
+    `;
     return;
   }
 
