@@ -18,6 +18,15 @@ const forumAdminSection = document.getElementById('forum-admin-section');
 const forumUserList = document.getElementById('forum-user-list');
 const forumAdminNote = document.getElementById('forum-admin-note');
 const forumAdminRefresh = document.getElementById('forum-admin-refresh');
+const forumProfileForm = document.getElementById('forum-profile-form');
+const forumProfileDisplayName = document.getElementById('forum-profile-display-name');
+const forumProfileCallsign = document.getElementById('forum-profile-callsign');
+const forumProfileAvatar = document.getElementById('forum-profile-avatar');
+const forumProfileBio = document.getElementById('forum-profile-bio');
+const forumProfileSave = document.getElementById('forum-profile-save');
+const forumProfileNote = document.getElementById('forum-profile-note');
+const forumProfileSelect = document.getElementById('forum-profile-select');
+const forumProfileView = document.getElementById('forum-profile-view');
 const forumRevealSections = document.querySelectorAll('.section-reveal');
 const forumThreadSubmitBtn = forumThreadForm?.querySelector('[type="submit"]');
 const forumReplySubmitBtn = forumReplyForm?.querySelector('[type="submit"]');
@@ -27,6 +36,8 @@ let currentUser = null;
 let ownerLockInfo = null;
 let currentUsers = [];
 let currentThreadCache = [];
+let currentProfiles = [];
+let selectedProfileId = null;
 
 const forumToastRoot = document.createElement('div');
 forumToastRoot.className = 'toast-stack';
@@ -56,6 +67,25 @@ const showForumToast = (message, type = 'info') => {
     toast.classList.remove('is-visible');
     window.setTimeout(() => toast.remove(), 220);
   }, 2600);
+};
+
+const formatProfileDate = (value) => {
+  if (!value) {
+    return '-';
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+
+  return parsed.toLocaleString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 };
 
 const setBusyState = (button, busy, busyLabel) => {
@@ -160,6 +190,104 @@ const renderAuthState = async () => {
   }
 };
 
+const renderProfileView = (profile) => {
+  if (!forumProfileView) {
+    return;
+  }
+
+  if (!profile) {
+    forumProfileView.innerHTML = '<p class="forum-empty">Noch kein Profil ausgewaehlt.</p>';
+    return;
+  }
+
+  const avatar = profile.avatar_url
+    ? `<img src="${escapeHtml(profile.avatar_url)}" alt="Avatar von ${escapeHtml(profile.display_name)}" class="forum-profile-avatar" loading="lazy" />`
+    : '<div class="forum-profile-avatar forum-profile-avatar--fallback" aria-hidden="true">36</div>';
+
+  forumProfileView.innerHTML = `
+    <article class="forum-thread-view forum-profile-card">
+      <header class="forum-thread-view-head forum-profile-head">
+        ${avatar}
+        <div>
+          <h3>${escapeHtml(profile.display_name)}</h3>
+          <p class="forum-meta">${escapeHtml(profile.role)}${profile.callsign ? ` | Callsign: ${escapeHtml(profile.callsign)}` : ''}</p>
+        </div>
+      </header>
+      <p class="forum-thread-body">${escapeHtml(profile.bio || 'Noch keine Profilbeschreibung hinterlegt.')}</p>
+      <p class="forum-meta">Mitglied seit: ${escapeHtml(formatProfileDate(profile.created_at))}</p>
+      <p class="forum-meta">Letzte Aktivitaet: ${escapeHtml(formatProfileDate(profile.last_login_at))}</p>
+    </article>
+  `;
+};
+
+const fillProfileForm = (profile) => {
+  if (!profile || !forumProfileForm) {
+    return;
+  }
+
+  forumProfileDisplayName.value = profile.display_name || '';
+  forumProfileCallsign.value = profile.callsign || '';
+  forumProfileAvatar.value = profile.avatar_url || '';
+  forumProfileBio.value = profile.bio || '';
+  forumProfileNote.textContent = 'Profil geladen. Du kannst jetzt Anpassungen speichern.';
+};
+
+const renderProfileOptions = (profiles) => {
+  if (!forumProfileSelect) {
+    return;
+  }
+
+  const options = ['<option value="">Profil waehlen...</option>'];
+  profiles.forEach((profile) => {
+    const roleSuffix = profile.role ? ` (${profile.role})` : '';
+    options.push(`<option value="${profile.id}">${escapeHtml(profile.display_name)}${escapeHtml(roleSuffix)}</option>`);
+  });
+  forumProfileSelect.innerHTML = options.join('');
+
+  if (selectedProfileId) {
+    forumProfileSelect.value = String(selectedProfileId);
+  }
+};
+
+const openProfile = async (profileId) => {
+  const parsedId = Number(profileId);
+  if (!Number.isInteger(parsedId) || parsedId <= 0) {
+    return;
+  }
+
+  selectedProfileId = parsedId;
+  if (forumProfileSelect) {
+    forumProfileSelect.value = String(parsedId);
+  }
+
+  try {
+    const data = await apiFetch(`/api/profiles/${parsedId}`);
+    renderProfileView(data.profile);
+  } catch (error) {
+    renderProfileView(null);
+    showForumToast(error.message, 'error');
+  }
+};
+
+const attachProfileButtons = (root) => {
+  if (!root) {
+    return;
+  }
+
+  root.querySelectorAll('[data-profile-open]').forEach((button) => {
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      const id = Number(button.dataset.profileOpen);
+      if (!Number.isInteger(id) || id <= 0) {
+        return;
+      }
+
+      openProfile(id);
+      forumProfileView?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+};
+
 const renderUsers = (users) => {
   currentUsers = users;
 
@@ -175,7 +303,7 @@ const renderUsers = (users) => {
   forumUserList.innerHTML = users.map((user) => `
     <div class="forum-user-card" data-user-id="${user.id}">
       <div>
-        <strong>${escapeHtml(user.display_name)}</strong>
+        <strong><button type="button" class="forum-link-button" data-profile-open="${user.id}">${escapeHtml(user.display_name)}</button></strong>
         <span>${escapeHtml(user.role)}</span>
       </div>
       <select data-role-select="${user.id}">
@@ -186,6 +314,8 @@ const renderUsers = (users) => {
       </select>
     </div>
   `).join('');
+
+  attachProfileButtons(forumUserList);
 
   forumUserList.querySelectorAll('[data-role-select]').forEach((select) => {
     select.addEventListener('change', async () => {
@@ -238,7 +368,7 @@ const renderThreads = (threads) => {
         <span class="forum-thread-replies">${thread.reply_count} Antworten</span>
       </span>
       <span class="forum-thread-card-meta">
-        <span>${escapeHtml(thread.author_name)}</span>
+        <span>${thread.author_user_id ? `<button type="button" class="forum-link-button" data-profile-open="${thread.author_user_id}">${escapeHtml(thread.author_name)}</button>` : escapeHtml(thread.author_name)}</span>
         <span>${escapeHtml(thread.author_role)}</span>
       </span>
     </button>
@@ -247,6 +377,8 @@ const renderThreads = (threads) => {
   forumThreadList.querySelectorAll('[data-thread-id]').forEach((button) => {
     button.addEventListener('click', () => loadThread(Number(button.dataset.threadId)));
   });
+
+  attachProfileButtons(forumThreadList);
 };
 
 const renderThreadSkeleton = () => {
@@ -278,7 +410,7 @@ const renderThreadDetail = (thread, posts) => {
     <article class="forum-thread-view">
       <header class="forum-thread-view-head">
         <h3>${escapeHtml(thread.title)}</h3>
-        <p class="forum-meta">${escapeHtml(thread.author_name)} | ${escapeHtml(thread.author_role)} | ${escapeHtml(thread.created_at)}</p>
+        <p class="forum-meta">${thread.author_user_id ? `<button type="button" class="forum-link-button" data-profile-open="${thread.author_user_id}">${escapeHtml(thread.author_name)}</button>` : escapeHtml(thread.author_name)} | ${escapeHtml(thread.author_role)} | ${escapeHtml(thread.created_at)}</p>
       </header>
       <p class="forum-thread-body">${escapeHtml(thread.body)}</p>
     </article>
@@ -286,13 +418,38 @@ const renderThreadDetail = (thread, posts) => {
       ${posts.length ? posts.map((post) => `
         <article class="forum-post">
           <header class="forum-post-head">
-            <p class="forum-meta">${escapeHtml(post.author_name)} | ${escapeHtml(post.author_role)} | ${escapeHtml(post.created_at)}</p>
+            <p class="forum-meta">${post.author_user_id ? `<button type="button" class="forum-link-button" data-profile-open="${post.author_user_id}">${escapeHtml(post.author_name)}</button>` : escapeHtml(post.author_name)} | ${escapeHtml(post.author_role)} | ${escapeHtml(post.created_at)}</p>
           </header>
           <p class="forum-post-body">${escapeHtml(post.body)}</p>
         </article>
       `).join('') : '<p class="forum-empty">Noch keine Antworten. Sei die erste Rueckmeldung in diesem Thread.</p>'}
     </div>
   `;
+
+  attachProfileButtons(forumThreadDetail);
+};
+
+const loadProfiles = async () => {
+  const data = await apiFetch('/api/profiles');
+  currentProfiles = data.profiles || [];
+  renderProfileOptions(currentProfiles);
+
+  if (!selectedProfileId && currentUser?.id) {
+    selectedProfileId = currentUser.id;
+  }
+
+  if (selectedProfileId) {
+    await openProfile(selectedProfileId);
+  }
+};
+
+const loadMyProfile = async () => {
+  if (!currentUser) {
+    return;
+  }
+
+  const data = await apiFetch('/api/me/profile');
+  fillProfileForm(data.profile);
 };
 
 const loadThreads = async () => {
@@ -363,6 +520,56 @@ forumLogoutBtn?.addEventListener('click', async () => {
     forumAuthState.textContent = error.message;
     showForumToast(error.message, 'error');
     setBusyState(forumLogoutBtn, false);
+  }
+});
+
+forumProfileSelect?.addEventListener('change', async () => {
+  const profileId = Number(forumProfileSelect.value);
+  if (!Number.isInteger(profileId) || profileId <= 0) {
+    selectedProfileId = null;
+    renderProfileView(null);
+    return;
+  }
+
+  await openProfile(profileId);
+});
+
+forumProfileForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!currentUser) {
+    showForumToast('Bitte zuerst einloggen.', 'error');
+    return;
+  }
+
+  const payload = {
+    displayName: forumProfileDisplayName.value.trim(),
+    callsign: forumProfileCallsign.value.trim(),
+    avatarUrl: forumProfileAvatar.value.trim(),
+    bio: forumProfileBio.value.trim(),
+  };
+
+  setBusyState(forumProfileSave, true, 'Speichere...');
+
+  try {
+    const data = await apiFetch('/api/me/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+
+    forumProfileNote.textContent = 'Profil gespeichert.';
+    showForumToast('Profil gespeichert', 'success');
+
+    currentUser.display_name = data.profile.display_name;
+    forumAuthState.textContent = data.profile.display_name;
+
+    selectedProfileId = data.profile.id;
+    await loadProfiles();
+    await loadThreads();
+  } catch (error) {
+    forumProfileNote.textContent = error.message;
+    showForumToast(error.message, 'error');
+  } finally {
+    setBusyState(forumProfileSave, false);
   }
 });
 
@@ -456,6 +663,8 @@ forumReplyForm?.addEventListener('submit', async (event) => {
     if (currentUser && ['owner', 'admin'].includes(currentUser.role)) {
       await loadAdminUsers();
     }
+    await loadMyProfile();
+    await loadProfiles();
     await loadThreads();
   } catch (error) {
     forumThreadDetail.innerHTML = `<p class="forum-empty">${escapeHtml(error.message)}</p>`;

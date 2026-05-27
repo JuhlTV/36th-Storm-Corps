@@ -145,6 +145,49 @@
       </div>
     </section>
 
+    <section class="forum-board section-reveal" id="forum-profile-section">
+      <div class="container forum-grid">
+        <article class="forum-panel">
+          <h2>Mein Profil</h2>
+          <p class="forum-panel-subtitle">Passe deinen Anzeigenamen, Callsign, Bio und Profilbild an.</p>
+          <form id="forum-profile-form" class="forum-form">
+            <label>
+              <span>Anzeigename</span>
+              <input id="forum-profile-display-name" type="text" maxlength="80" placeholder="Dein Anzeigename" />
+            </label>
+            <label>
+              <span>Callsign</span>
+              <input id="forum-profile-callsign" type="text" maxlength="40" placeholder="z. B. Viper" />
+            </label>
+            <label>
+              <span>Profilbild URL</span>
+              <input id="forum-profile-avatar" type="url" maxlength="500" placeholder="https://..." />
+            </label>
+            <label>
+              <span>Bio</span>
+              <textarea id="forum-profile-bio" rows="5" maxlength="400" placeholder="Kurzprofil, Spezialisierung, Squad-Rolle..."></textarea>
+            </label>
+            <button class="btn btn-primary" type="submit" id="forum-profile-save">Profil speichern</button>
+            <p class="forum-note" id="forum-profile-note">Profil noch nicht geladen.</p>
+          </form>
+        </article>
+
+        <article class="forum-panel">
+          <h2>Profil ansehen</h2>
+          <p class="forum-panel-subtitle">Waehle ein Profil aus der Liste oder klicke einen Autor im Threadverlauf.</p>
+          <label class="forum-form">
+            <span>Profil auswaehlen</span>
+            <select id="forum-profile-select">
+              <option value="">Profil waehlen...</option>
+            </select>
+          </label>
+          <div id="forum-profile-view" class="forum-thread-detail">
+            <p class="forum-empty">Noch kein Profil ausgewaehlt.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <section class="forum-board section-reveal" id="forum-admin-section" hidden>
       <div class="container forum-grid forum-admin-grid">
         <article class="forum-panel forum-admin-panel forum-admin-focus">

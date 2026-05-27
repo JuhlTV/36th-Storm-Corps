@@ -22,6 +22,9 @@ const {
   findUserByLogin,
   setLocalCredentials,
   upsertUserFromGoogle,
+  updateUserProfile,
+  getPublicProfileById,
+  listPublicProfiles,
   listUsers,
   setUserRole,
   touchUserLogin,
@@ -585,6 +588,77 @@ app.get('/api/me', (req, res) => {
   }
 
   return res.json({ user: sanitizeUser(req.user) });
+});
+
+app.get('/api/me/profile', ensureAuth, (req, res) => {
+  const profile = getPublicProfileById(req.user.id);
+  return res.json({ profile });
+});
+
+app.patch('/api/me/profile', ensureAuth, (req, res) => {
+  const displayName = String(req.body?.displayName || '').trim();
+  const avatarUrlRaw = String(req.body?.avatarUrl || '').trim();
+  const callsignRaw = String(req.body?.callsign || '').trim();
+  const bioRaw = String(req.body?.bio || '').trim();
+
+  if (displayName.length < 2 || displayName.length > 80) {
+    return res.status(400).json({ error: 'Display name must be 2-80 characters long' });
+  }
+
+  if (callsignRaw.length > 40) {
+    return res.status(400).json({ error: 'Callsign must be at most 40 characters long' });
+  }
+
+  if (bioRaw.length > 400) {
+    return res.status(400).json({ error: 'Bio must be at most 400 characters long' });
+  }
+
+  const avatarUrl = avatarUrlRaw ? avatarUrlRaw : null;
+  if (avatarUrl && !/^https?:\/\//i.test(avatarUrl)) {
+    return res.status(400).json({ error: 'Avatar URL must start with http:// or https://' });
+  }
+
+  const callsign = callsignRaw || null;
+  const bio = bioRaw;
+
+  const profile = updateUserProfile({
+    userId: req.user.id,
+    displayName,
+    avatarUrl,
+    callsign,
+    bio,
+  });
+
+  const freshUser = findUserById(req.user.id);
+  if (freshUser) {
+    req.user = freshUser;
+  }
+
+  recordAuditEvent({
+    actorUserId: req.user.id,
+    eventType: 'profile_update',
+    payload: { callsign: callsign || null, hasAvatar: Boolean(avatarUrl) },
+  });
+
+  return res.json({ profile });
+});
+
+app.get('/api/profiles', ensureAuth, (req, res) => {
+  return res.json({ profiles: listPublicProfiles() });
+});
+
+app.get('/api/profiles/:id', ensureAuth, (req, res) => {
+  const profileId = Number(req.params.id);
+  if (!Number.isInteger(profileId) || profileId <= 0) {
+    return res.status(400).json({ error: 'Invalid profile id' });
+  }
+
+  const profile = getPublicProfileById(profileId);
+  if (!profile) {
+    return res.status(404).json({ error: 'Profile not found' });
+  }
+
+  return res.json({ profile });
 });
 
 app.get('/api/users', ensureRole(['owner', 'admin']), (req, res) => {

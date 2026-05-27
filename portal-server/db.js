@@ -6,6 +6,23 @@ const storePath = path.join(dataDir, 'portal-data.json');
 
 const nowIso = () => new Date().toISOString();
 
+const toPublicProfile = (user) => {
+  if (!user) {
+    return null;
+  }
+
+  return {
+    id: user.id,
+    display_name: user.display_name,
+    role: user.role,
+    avatar_url: user.avatar_url || null,
+    callsign: user.callsign || null,
+    bio: user.bio || '',
+    created_at: user.created_at,
+    last_login_at: user.last_login_at || null,
+  };
+};
+
 const normalizeRole = (role) => {
   const allowed = new Set(['owner', 'admin', 'moderator', 'member']);
   return allowed.has(role) ? role : 'member';
@@ -133,6 +150,8 @@ const createLocalUser = ({ username, email = null, passwordHash, displayName, ip
       password_hash: passwordHash || null,
       display_name: displayName,
       avatar_url: null,
+      callsign: null,
+      bio: '',
       role: normalizeRole(defaultRole),
       first_ip: ipAddress || null,
       last_ip: ipAddress || null,
@@ -168,6 +187,8 @@ const upsertUserFromGoogle = ({ profile, ipAddress, defaultRole = 'member' }) =>
         password_hash: null,
         display_name: displayName,
         avatar_url: avatarUrl,
+        callsign: null,
+        bio: '',
         role: normalizeRole(defaultRole),
         first_ip: ipAddress || null,
         last_ip: ipAddress || null,
@@ -184,6 +205,8 @@ const upsertUserFromGoogle = ({ profile, ipAddress, defaultRole = 'member' }) =>
     existing.auth_provider = 'google';
     existing.display_name = displayName;
     existing.avatar_url = avatarUrl;
+    existing.callsign = existing.callsign || null;
+    existing.bio = existing.bio || '';
     existing.role = existing.role === 'owner' ? 'owner' : normalizeRole(defaultRole);
     existing.first_ip = existing.first_ip || ipAddress || null;
     existing.last_ip = ipAddress || existing.last_ip || null;
@@ -226,12 +249,45 @@ const setLocalCredentials = ({ userId, username, email = null, passwordHash, dis
     user.auth_provider = 'local';
     user.password_hash = passwordHash || user.password_hash || null;
     user.display_name = displayName || user.display_name;
+    user.callsign = user.callsign || null;
+    user.bio = user.bio || '';
     user.first_ip = user.first_ip || ipAddress || null;
     user.last_ip = ipAddress || user.last_ip || null;
     user.updated_at = timestamp;
     user.last_login_at = user.last_login_at || timestamp;
     return user;
   });
+};
+
+const updateUserProfile = ({ userId, displayName, avatarUrl, callsign, bio }) => {
+  return withStore((store) => {
+    const user = store.users.find((entry) => entry.id === userId);
+    if (!user) {
+      return null;
+    }
+
+    user.display_name = displayName;
+    user.avatar_url = avatarUrl;
+    user.callsign = callsign;
+    user.bio = bio;
+    user.updated_at = nowIso();
+
+    return toPublicProfile(user);
+  });
+};
+
+const getPublicProfileById = (userId) => {
+  const user = findUserById(userId);
+  return toPublicProfile(user);
+};
+
+const listPublicProfiles = () => {
+  const store = readStore();
+
+  return [...store.users]
+    .map((user) => toPublicProfile(user))
+    .filter(Boolean)
+    .sort((a, b) => String(a.display_name || '').localeCompare(String(b.display_name || '')));
 };
 
 const clearLocalCredentials = ({ userId }) => {
@@ -309,6 +365,7 @@ const listThreads = () => {
       updated_at: thread.updated_at,
       author_name: author?.display_name || 'Unbekannt',
       author_role: author?.role || 'member',
+      author_user_id: author?.id || null,
       reply_count: replyCount,
     };
   });
@@ -339,6 +396,7 @@ const getThreadById = (threadId) => {
     updated_at: thread.updated_at,
     author_name: author?.display_name || 'Unbekannt',
     author_role: author?.role || 'member',
+    author_user_id: author?.id || null,
   };
 };
 
@@ -355,6 +413,7 @@ const listPostsForThread = (threadId) => {
         created_at: post.created_at,
         author_name: author?.display_name || 'Unbekannt',
         author_role: author?.role || 'member',
+        author_user_id: author?.id || null,
         avatar_url: author?.avatar_url || null,
       };
     });
@@ -404,6 +463,7 @@ const setThreadLocked = ({ threadId, locked }) => {
       updated_at: thread.updated_at,
       author_name: author?.display_name || 'Unbekannt',
       author_role: author?.role || 'member',
+      author_user_id: author?.id || null,
     };
   });
 };
@@ -436,6 +496,9 @@ module.exports = {
   upsertUserFromGoogle,
   findUserByGoogleSub,
   findUserByEmail,
+  updateUserProfile,
+  getPublicProfileById,
+  listPublicProfiles,
   touchUserLogin,
   listUsers,
   setUserRole,
