@@ -91,6 +91,15 @@ const fileToBase64 = (file) => new Promise((resolve, reject) => {
 const getProfileIdFromPath = () => {
   const segments = window.location.pathname.split('/').filter(Boolean);
   const lastSegment = segments[segments.length - 1] || '';
+
+  if (segments.length === 1 && segments[0] === 'profile') {
+    return null;
+  }
+
+  if (lastSegment === 'me') {
+    return 'me';
+  }
+
   const profileId = Number(lastSegment);
   return Number.isInteger(profileId) && profileId > 0 ? profileId : null;
 };
@@ -309,13 +318,25 @@ profileFollowBtn?.addEventListener('click', async () => {
 
 (async () => {
   try {
-    const profileId = getProfileIdFromPath();
-    if (!profileId) {
-      throw new Error('Ungueltige Profil-ID in der URL.');
+    let profileId = getProfileIdFromPath();
+
+    try {
+      const me = await apiFetch('/api/me');
+      currentUser = me.user || null;
+    } catch (error) {
+      currentUser = null;
     }
 
-    const me = await apiFetch('/api/me');
-    currentUser = me.user;
+    if (profileId === 'me' || profileId === null) {
+      if (!currentUser) {
+        const target = encodeURIComponent('profile');
+        window.location.replace(`login.html?redirect=${target}`);
+        return;
+      }
+
+      profileId = currentUser.id;
+    }
+
     if (!currentUser) {
       const target = encodeURIComponent(`profile/${profileId}`);
       window.location.replace(`login.html?redirect=${target}`);
