@@ -91,6 +91,11 @@ const revealForumSections = () => {
 };
 
 const apiFetch = async (url, options = {}) => {
+  const apiClient = window.StormCorpsApi?.apiFetchRaw;
+  if (typeof apiClient !== 'function') {
+    throw new Error('API-Konfiguration fehlt. Seite neu laden und erneut versuchen.');
+  }
+
   const method = String(options.method || 'GET').toUpperCase();
   const shouldSendJsonHeader = method !== 'GET' && method !== 'HEAD' && options.body !== undefined;
   const mergedHeaders = {
@@ -99,7 +104,7 @@ const apiFetch = async (url, options = {}) => {
   };
 
   try {
-    const response = await window.StormCorpsApi.apiFetchRaw(url, {
+    const response = await apiClient(url, {
       ...(Object.keys(mergedHeaders).length ? { headers: mergedHeaders } : {}),
       ...options,
     });
@@ -113,6 +118,10 @@ const apiFetch = async (url, options = {}) => {
   } catch (error) {
     if (String(error?.message || '').startsWith('Request failed:') || error?.message === 'Not authenticated' || error?.message === 'Insufficient permissions') {
       throw error;
+    }
+
+    if (error?.name === 'AbortError') {
+      throw new Error('API-Anfrage hat zu lange gedauert. Bitte erneut versuchen.');
     }
   }
 

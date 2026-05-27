@@ -101,7 +101,7 @@
 
   <div id="toast-root" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
 
-  <script src="api-config.js?v=20260527d"></script>
+  <script src="api-config.js?v=20260527e"></script>
   <script>
     const getSafeRedirectTarget = (fallback = 'forum.html') => {
       const raw = new URLSearchParams(window.location.search).get('redirect') || '';
@@ -121,7 +121,19 @@
     const toastRoot = document.getElementById('toast-root');
 
     const apiFetch = async (route, options = {}) => {
-      return window.StormCorpsApi.apiFetchRaw(route, options);
+      const apiClient = window.StormCorpsApi?.apiFetchRaw;
+      if (typeof apiClient !== 'function') {
+        throw new Error('API-Konfiguration fehlt. Bitte Seite neu laden.');
+      }
+
+      try {
+        return await apiClient(route, options);
+      } catch (error) {
+        if (error?.name === 'AbortError') {
+          throw new Error('Anfrage-Zeitlimit erreicht. Bitte erneut versuchen.');
+        }
+        throw error;
+      }
     };
 
     const showToast = (message, type = 'info') => {

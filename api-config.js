@@ -4,6 +4,7 @@
     'http://localhost:3000',
     'http://127.0.0.1:3000',
   ];
+  const REQUEST_TIMEOUT_MS = 12000;
 
   const unique = (values) => Array.from(new Set(values.filter(Boolean)));
   const normalizeBase = (value) => String(value || '').trim().replace(/\/$/, '');
@@ -89,12 +90,17 @@
       }
 
       const requestUrl = withApiBase(base, route);
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
       try {
         const response = await fetch(requestUrl, {
           credentials: 'include',
+          signal: controller.signal,
           ...options,
         });
+
+        window.clearTimeout(timeoutId);
 
         if (response.status === 404) {
           lastError = new Error(`Route not found on ${base}`);
@@ -111,6 +117,7 @@
 
         return response;
       } catch (error) {
+        window.clearTimeout(timeoutId);
         lastError = error;
       }
     }
@@ -121,6 +128,7 @@
   window.StormCorpsApi = {
     API_BASE_STORAGE_KEY,
     DEFAULT_API_BASES,
+    REQUEST_TIMEOUT_MS,
     getApiCandidates,
     withApiBase,
     apiFetchRaw,
