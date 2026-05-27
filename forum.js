@@ -200,8 +200,14 @@ const renderThreads = (threads) => {
 
   forumThreadList.innerHTML = threads.map((thread) => `
     <button type="button" class="forum-thread-card ${thread.id === selectedThreadId ? 'is-active' : ''}" data-thread-id="${thread.id}">
-      <strong>${escapeHtml(thread.title)}</strong>
-      <span>${escapeHtml(thread.author_name)} | ${escapeHtml(thread.author_role)} | ${thread.reply_count} Antworten</span>
+      <span class="forum-thread-card-top">
+        <strong>${escapeHtml(thread.title)}</strong>
+        <span class="forum-thread-replies">${thread.reply_count} Antworten</span>
+      </span>
+      <span class="forum-thread-card-meta">
+        <span>${escapeHtml(thread.author_name)}</span>
+        <span>${escapeHtml(thread.author_role)}</span>
+      </span>
     </button>
   `).join('');
 
@@ -237,17 +243,21 @@ const renderThreadDetail = (thread, posts) => {
 
   forumThreadDetail.innerHTML = `
     <article class="forum-thread-view">
-      <h3>${escapeHtml(thread.title)}</h3>
-      <p class="forum-meta">${escapeHtml(thread.author_name)} | ${escapeHtml(thread.author_role)} | ${escapeHtml(thread.created_at)}</p>
-      <p>${escapeHtml(thread.body)}</p>
+      <header class="forum-thread-view-head">
+        <h3>${escapeHtml(thread.title)}</h3>
+        <p class="forum-meta">${escapeHtml(thread.author_name)} | ${escapeHtml(thread.author_role)} | ${escapeHtml(thread.created_at)}</p>
+      </header>
+      <p class="forum-thread-body">${escapeHtml(thread.body)}</p>
     </article>
     <div class="forum-post-list">
-      ${posts.map((post) => `
+      ${posts.length ? posts.map((post) => `
         <article class="forum-post">
-          <p class="forum-meta">${escapeHtml(post.author_name)} | ${escapeHtml(post.author_role)} | ${escapeHtml(post.created_at)}</p>
-          <p>${escapeHtml(post.body)}</p>
+          <header class="forum-post-head">
+            <p class="forum-meta">${escapeHtml(post.author_name)} | ${escapeHtml(post.author_role)} | ${escapeHtml(post.created_at)}</p>
+          </header>
+          <p class="forum-post-body">${escapeHtml(post.body)}</p>
         </article>
-      `).join('')}
+      `).join('') : '<p class="forum-empty">Noch keine Antworten. Sei die erste Rueckmeldung in diesem Thread.</p>'}
     </div>
   `;
 };
