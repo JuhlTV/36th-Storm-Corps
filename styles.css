@@ -593,6 +593,18 @@ section[id] {
   transition: transform var(--motion-mid) var(--ease-standard), box-shadow var(--motion-mid) var(--ease-standard);
 }
 
+.brand-mark.brand-mark-image {
+  display: block;
+  object-fit: contain;
+  padding: 0.1rem;
+  background: transparent;
+  border: 0;
+  clip-path: none;
+  box-shadow: none;
+  text-shadow: none;
+  color: transparent;
+}
+
 .brand-mark::before {
   content: "";
   position: absolute;
@@ -615,6 +627,11 @@ section[id] {
   pointer-events: none;
 }
 
+.brand-mark.brand-mark-image::before,
+.brand-mark.brand-mark-image::after {
+  content: none;
+}
+
 .brand:hover .brand-mark {
   transform: translateY(-1px);
   box-shadow:
@@ -623,6 +640,11 @@ section[id] {
     0 0 0 1px rgba(48, 98, 176, 0.36),
     0 0 10px rgba(106, 169, 255, 0.12);
 }
+
+  .brand:hover .brand-mark.brand-mark-image {
+    transform: translateY(-1px);
+    box-shadow: none;
+  }
 
 .brand-text {
   font-family: "Orbitron", "Barlow Condensed", sans-serif;
@@ -5365,6 +5387,17 @@ body.page-auth {
   box-shadow:
     0 8px 18px rgba(0, 0, 0, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.auth-brand .brand-mark.brand-mark-image {
+  display: block;
+  object-fit: contain;
+  padding: 0.08rem;
+  background: transparent;
+  border: 0;
+  clip-path: none;
+  box-shadow: none;
+  color: transparent;
 }
 
 .auth-brand .brand-text {
