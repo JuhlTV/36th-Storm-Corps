@@ -18,15 +18,21 @@ const forumAdminSection = document.getElementById('forum-admin-section');
 const forumUserList = document.getElementById('forum-user-list');
 const forumAdminNote = document.getElementById('forum-admin-note');
 const forumAdminRefresh = document.getElementById('forum-admin-refresh');
+const forumAuditRefresh = document.getElementById('forum-audit-refresh');
+const forumAuditList = document.getElementById('forum-audit-list');
 const forumProfileForm = document.getElementById('forum-profile-form');
 const forumProfileDisplayName = document.getElementById('forum-profile-display-name');
 const forumProfileCallsign = document.getElementById('forum-profile-callsign');
 const forumProfileAvatar = document.getElementById('forum-profile-avatar');
+const forumProfileAvatarFile = document.getElementById('forum-profile-avatar-file');
+const forumProfileAvatarUpload = document.getElementById('forum-profile-avatar-upload');
 const forumProfileBio = document.getElementById('forum-profile-bio');
 const forumProfileSave = document.getElementById('forum-profile-save');
 const forumProfileNote = document.getElementById('forum-profile-note');
 const forumProfileSelect = document.getElementById('forum-profile-select');
 const forumProfileView = document.getElementById('forum-profile-view');
+const forumContactsList = document.getElementById('forum-contacts-list');
+const forumContactsRefresh = document.getElementById('forum-contacts-refresh');
 const forumRevealSections = document.querySelectorAll('.section-reveal');
 const forumThreadSubmitBtn = forumThreadForm?.querySelector('[type="submit"]');
 const forumReplySubmitBtn = forumReplyForm?.querySelector('[type="submit"]');
@@ -37,6 +43,9 @@ let ownerLockInfo = null;
 let currentUsers = [];
 let currentThreadCache = [];
 let currentProfiles = [];
+let currentContacts = [];
+let unitMedals = [];
+let medalAuditEntries = [];
 let selectedProfileId = null;
 
 const forumToastRoot = document.createElement('div');
@@ -103,10 +112,28 @@ const setBusyState = (button, busy, busyLabel) => {
   button.textContent = busy ? (busyLabel || button.dataset.defaultLabel) : button.dataset.defaultLabel;
 };
 
+const fileToBase64 = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const raw = String(reader.result || '');
+    const base64 = raw.includes(',') ? raw.split(',')[1] : '';
+    if (!base64) {
+      reject(new Error('Datei konnte nicht verarbeitet werden.'));
+      return;
+    }
+    resolve(base64);
+  };
+  reader.onerror = () => reject(new Error('Datei-Lesen fehlgeschlagen.'));
+  reader.readAsDataURL(file);
+});
+
 const currentForumLocation = () => {
   const pageName = window.location.pathname.split('/').pop() || 'forum.html';
   return `${pageName}${window.location.search}${window.location.hash}`;
 };
+
+const canManageMedals = () => Boolean(currentUser && ['owner', 'admin', 'moderator'].includes(currentUser.role));
+const canManageUsers = () => Boolean(currentUser && ['owner', 'admin'].includes(currentUser.role));
 
 const redirectToLogin = () => {
   const target = encodeURIComponent(currentForumLocation());
@@ -184,10 +211,31 @@ const renderAuthState = async () => {
   forumThreadFormNote.textContent = currentUser ? 'Thread kann jetzt gepostet werden.' : 'Zum Posten musst du eingeloggt sein.';
   forumReplyFormNote.textContent = currentUser ? 'Antworten sind jetzt aktiv.' : 'Antworten sind nur fuer eingeloggte Nutzer aktiv.';
 
-  const canManageUsers = currentUser && ['owner', 'admin'].includes(currentUser.role);
+  const canOpenAdminPanel = canManageMedals() || canManageUsers();
   if (forumAdminSection) {
-    forumAdminSection.hidden = !canManageUsers;
+    forumAdminSection.hidden = !canOpenAdminPanel;
   }
+};
+
+const renderMedalAudit = (entries) => {
+  if (!forumAuditList) {
+    return;
+  }
+
+  if (!Array.isArray(entries) || !entries.length) {
+    forumAuditList.innerHTML = '<p class="forum-empty">Noch keine Medaillen-Audit-Eintraege vorhanden.</p>';
+    return;
+  }
+
+  forumAuditList.innerHTML = entries.map((entry) => {
+    const actionLabel = entry.event_type === 'profile_medal_award' ? 'vergeben' : 'entzogen';
+    return `
+      <article class="forum-audit-card">
+        <p class="forum-meta"><strong>${escapeHtml(entry.actor_display_name || 'Unbekannt')}</strong> hat <strong>${escapeHtml(entry.medal_id || 'unbekannt')}</strong> ${actionLabel}.</p>
+        <p class="forum-meta">Ziel: ${escapeHtml(entry.target_display_name || 'Unbekannt')} | Zeitpunkt: ${escapeHtml(formatProfileDate(entry.created_at))}</p>
+      </article>
+    `;
+  }).join('');
 };
 
 const renderProfileView = (profile) => {
@@ -204,6 +252,39 @@ const renderProfileView = (profile) => {
     ? `<img src="${escapeHtml(profile.avatar_url)}" alt="Avatar von ${escapeHtml(profile.display_name)}" class="forum-profile-avatar" loading="lazy" />`
     : '<div class="forum-profile-avatar forum-profile-avatar--fallback" aria-hidden="true">36</div>';
 
+  const isOwnProfile = currentUser && profile.id === currentUser.id;
+  const followAction = !isOwnProfile
+    ? `<button type="button" class="btn btn-ghost" data-follow-toggle="${profile.id}" data-following="${profile.is_following ? '1' : '0'}">${profile.is_following ? 'Entfolgen' : 'Folgen'}</button>`
+    : '';
+
+  const profileLink = `<a class="btn btn-ghost" href="profile/${profile.id}" target="_blank" rel="noopener">Profilseite oeffnen</a>`;
+  const medalEntries = Array.isArray(profile.medals) ? profile.medals : [];
+  const medalListMarkup = medalEntries.length
+    ? `<div class="forum-medal-list">${medalEntries.map((medal) => `<span class="forum-medal-chip forum-medal-chip--${escapeHtml(medal.tier || 'bronze')}" title="${escapeHtml(medal.description || '')}">${escapeHtml(medal.name)}</span>`).join('')}</div>`
+    : '<p class="forum-empty">Keine Medaillen vergeben.</p>';
+
+  const availableOptions = unitMedals
+    .map((medal) => `<option value="${escapeHtml(medal.id)}">${escapeHtml(medal.name)}</option>`)
+    .join('');
+
+  const medalManagerMarkup = canManageMedals()
+    ? `
+      <div class="forum-medal-manager">
+        <label>
+          <span>Medaillie vergeben (Einheit)</span>
+          <select data-medal-select="${profile.id}">
+            <option value="">Medaillie waehlen...</option>
+            ${availableOptions}
+          </select>
+        </label>
+        <div class="forum-profile-actions">
+          <button type="button" class="btn btn-ghost" data-medal-award="${profile.id}">Vergabe</button>
+          <button type="button" class="btn btn-ghost" data-medal-revoke="${profile.id}">Entzug</button>
+        </div>
+      </div>
+    `
+    : '';
+
   forumProfileView.innerHTML = `
     <article class="forum-thread-view forum-profile-card">
       <header class="forum-thread-view-head forum-profile-head">
@@ -216,8 +297,143 @@ const renderProfileView = (profile) => {
       <p class="forum-thread-body">${escapeHtml(profile.bio || 'Noch keine Profilbeschreibung hinterlegt.')}</p>
       <p class="forum-meta">Mitglied seit: ${escapeHtml(formatProfileDate(profile.created_at))}</p>
       <p class="forum-meta">Letzte Aktivitaet: ${escapeHtml(formatProfileDate(profile.last_login_at))}</p>
+      <p class="forum-meta">Letzte Forum-Aktivitaet: ${escapeHtml(formatProfileDate(profile.last_forum_activity))}</p>
+      <div class="forum-profile-stats">
+        <span>Threads: ${Number(profile.thread_count || 0)}</span>
+        <span>Posts: ${Number(profile.post_count || 0)}</span>
+        <span>Follower: ${Number(profile.follower_count || 0)}</span>
+        <span>Folgt: ${Number(profile.following_count || 0)}</span>
+      </div>
+      <div class="forum-profile-actions">
+        ${followAction}
+        ${profileLink}
+      </div>
+      <section class="forum-medal-section">
+        <h4>Einheits-Medaillien</h4>
+        ${medalListMarkup}
+      </section>
+      ${medalManagerMarkup}
     </article>
   `;
+
+  forumProfileView.querySelectorAll('[data-follow-toggle]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const targetUserId = Number(button.dataset.followToggle);
+      const currentlyFollowing = button.dataset.following === '1';
+
+      try {
+        setBusyState(button, true, currentlyFollowing ? 'Entfolge...' : 'Folge...');
+
+        const data = await apiFetch(`/api/profiles/${targetUserId}/follow`, {
+          method: 'POST',
+          body: JSON.stringify({ follow: !currentlyFollowing }),
+        });
+
+        renderProfileView(data.profile);
+        await loadProfiles();
+        await loadContacts();
+      } catch (error) {
+        showForumToast(error.message, 'error');
+      } finally {
+        setBusyState(button, false);
+      }
+    });
+  });
+
+  forumProfileView.querySelectorAll('[data-medal-award]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const targetUserId = Number(button.dataset.medalAward);
+      const select = forumProfileView.querySelector(`[data-medal-select="${targetUserId}"]`);
+      const medalId = String(select?.value || '').trim();
+
+      if (!medalId) {
+        showForumToast('Bitte zuerst eine Medaillie waehlen.', 'error');
+        return;
+      }
+
+      try {
+        setBusyState(button, true, 'Vergabe...');
+        const data = await apiFetch(`/api/profiles/${targetUserId}/medals`, {
+          method: 'POST',
+          body: JSON.stringify({ medalId }),
+        });
+        renderProfileView(data.profile);
+        await loadProfiles();
+      } catch (error) {
+        showForumToast(error.message, 'error');
+      } finally {
+        setBusyState(button, false);
+      }
+    });
+  });
+
+  forumProfileView.querySelectorAll('[data-medal-revoke]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const targetUserId = Number(button.dataset.medalRevoke);
+      const select = forumProfileView.querySelector(`[data-medal-select="${targetUserId}"]`);
+      const medalId = String(select?.value || '').trim();
+
+      if (!medalId) {
+        showForumToast('Bitte zuerst eine Medaillie waehlen.', 'error');
+        return;
+      }
+
+      try {
+        setBusyState(button, true, 'Entzug...');
+        const data = await apiFetch(`/api/profiles/${targetUserId}/medals/${encodeURIComponent(medalId)}`, {
+          method: 'DELETE',
+        });
+        renderProfileView(data.profile);
+        await loadProfiles();
+      } catch (error) {
+        showForumToast(error.message, 'error');
+      } finally {
+        setBusyState(button, false);
+      }
+    });
+  });
+};
+
+const renderContacts = (contacts) => {
+  if (!forumContactsList) {
+    return;
+  }
+
+  if (!Array.isArray(contacts) || !contacts.length) {
+    forumContactsList.innerHTML = '<p class="forum-empty">Keine Kontakte vorhanden.</p>';
+    return;
+  }
+
+  forumContactsList.innerHTML = contacts.map((contact) => `
+    <article class="forum-contact-card">
+      <div class="forum-contact-top">
+        <strong><button type="button" class="forum-link-button" data-profile-open="${contact.id}">${escapeHtml(contact.display_name)}</button></strong>
+        <span class="forum-meta">${escapeHtml(contact.role || 'member')}</span>
+      </div>
+      <p class="forum-meta">Letzte Forum-Aktivitaet: ${escapeHtml(formatProfileDate(contact.last_forum_activity))}</p>
+    </article>
+  `).join('');
+
+  attachProfileButtons(forumContactsList);
+};
+
+const loadContacts = async () => {
+  if (!currentUser) {
+    return;
+  }
+
+  const data = await apiFetch('/api/me/contacts');
+  currentContacts = data.contacts || [];
+  renderContacts(currentContacts);
+};
+
+const loadUnitMedals = async () => {
+  if (!currentUser) {
+    return;
+  }
+
+  const data = await apiFetch('/api/medals');
+  unitMedals = Array.isArray(data.medals) ? data.medals : [];
 };
 
 const fillProfileForm = (profile) => {
@@ -228,6 +444,9 @@ const fillProfileForm = (profile) => {
   forumProfileDisplayName.value = profile.display_name || '';
   forumProfileCallsign.value = profile.callsign || '';
   forumProfileAvatar.value = profile.avatar_url || '';
+  if (forumProfileAvatarFile) {
+    forumProfileAvatarFile.value = '';
+  }
   forumProfileBio.value = profile.bio || '';
   forumProfileNote.textContent = 'Profil geladen. Du kannst jetzt Anpassungen speichern.';
 };
@@ -482,12 +701,24 @@ const loadThread = async (threadId) => {
 };
 
 const loadAdminUsers = async () => {
-  if (!currentUser || !['owner', 'admin'].includes(currentUser.role)) {
+  if (!canManageUsers()) {
     return;
   }
 
   const data = await apiFetch('/api/users');
   renderUsers(data.users);
+};
+
+const loadMedalAudit = async () => {
+  if (!canManageMedals()) {
+    medalAuditEntries = [];
+    renderMedalAudit([]);
+    return;
+  }
+
+  const data = await apiFetch('/api/audit/medals?limit=120');
+  medalAuditEntries = Array.isArray(data.entries) ? data.entries : [];
+  renderMedalAudit(medalAuditEntries);
 };
 
 forumRefreshBtn?.addEventListener('click', async () => {
@@ -508,6 +739,18 @@ forumAdminRefresh?.addEventListener('click', async () => {
     await loadAdminUsers();
   } finally {
     setBusyState(forumAdminRefresh, false);
+  }
+});
+
+forumAuditRefresh?.addEventListener('click', async () => {
+  setBusyState(forumAuditRefresh, true, 'Lade...');
+  try {
+    await loadMedalAudit();
+    showForumToast('Medaillen-Audit aktualisiert', 'success');
+  } catch (error) {
+    showForumToast(error.message, 'error');
+  } finally {
+    setBusyState(forumAuditRefresh, false);
   }
 });
 
@@ -532,6 +775,60 @@ forumProfileSelect?.addEventListener('change', async () => {
   }
 
   await openProfile(profileId);
+});
+
+forumContactsRefresh?.addEventListener('click', async () => {
+  setBusyState(forumContactsRefresh, true, 'Lade...');
+  try {
+    await loadContacts();
+    showForumToast('Kontakte aktualisiert', 'success');
+  } catch (error) {
+    showForumToast(error.message, 'error');
+  } finally {
+    setBusyState(forumContactsRefresh, false);
+  }
+});
+
+forumProfileAvatarUpload?.addEventListener('click', async () => {
+  if (!currentUser) {
+    showForumToast('Bitte zuerst einloggen.', 'error');
+    return;
+  }
+
+  const file = forumProfileAvatarFile?.files?.[0];
+  if (!file) {
+    showForumToast('Bitte zuerst eine Datei auswaehlen.', 'error');
+    return;
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    showForumToast('Datei ist zu gross (max. 2 MB).', 'error');
+    return;
+  }
+
+  setBusyState(forumProfileAvatarUpload, true, 'Upload...');
+
+  try {
+    const dataBase64 = await fileToBase64(file);
+    const data = await apiFetch('/api/me/avatar', {
+      method: 'POST',
+      body: JSON.stringify({
+        filename: file.name,
+        mimeType: file.type,
+        dataBase64,
+      }),
+    });
+
+    forumProfileAvatar.value = data.avatarUrl || data.profile?.avatar_url || '';
+    forumProfileNote.textContent = 'Profilbild erfolgreich hochgeladen.';
+    showForumToast('Profilbild aktualisiert', 'success');
+    await loadProfiles();
+    await loadContacts();
+  } catch (error) {
+    showForumToast(error.message, 'error');
+  } finally {
+    setBusyState(forumProfileAvatarUpload, false);
+  }
 });
 
 forumProfileForm?.addEventListener('submit', async (event) => {
@@ -564,6 +861,7 @@ forumProfileForm?.addEventListener('submit', async (event) => {
 
     selectedProfileId = data.profile.id;
     await loadProfiles();
+    await loadContacts();
     await loadThreads();
   } catch (error) {
     forumProfileNote.textContent = error.message;
@@ -660,11 +958,16 @@ forumReplyForm?.addEventListener('submit', async (event) => {
       redirectToLogin();
       return;
     }
-    if (currentUser && ['owner', 'admin'].includes(currentUser.role)) {
+    if (canManageUsers()) {
       await loadAdminUsers();
     }
+    if (canManageMedals()) {
+      await loadMedalAudit();
+    }
+    await loadUnitMedals();
     await loadMyProfile();
     await loadProfiles();
+    await loadContacts();
     await loadThreads();
   } catch (error) {
     forumThreadDetail.innerHTML = `<p class="forum-empty">${escapeHtml(error.message)}</p>`;

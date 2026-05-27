@@ -25,6 +25,11 @@ const {
   updateUserProfile,
   getPublicProfileById,
   listPublicProfiles,
+  setFollowState,
+  listContacts,
+  listUnitMedals,
+  awardUnitMedal,
+  revokeUnitMedal,
   listUsers,
   setUserRole,
   touchUserLogin,
@@ -35,6 +40,7 @@ const {
   createPost,
   setThreadLocked,
   recordAuditEvent,
+  listMedalAuditEvents,
 } = require('./db');
 
 const app = express();
@@ -48,9 +54,11 @@ const OWNER_IP = process.env.OWNER_IP?.trim() || '';
 const OWNER_IP_LOCK = String(process.env.OWNER_IP_LOCK || 'false').toLowerCase() === 'true';
 const allowedRoles = new Set(['owner', 'admin', 'moderator', 'member']);
 const dataDir = path.resolve(process.env.PORTAL_DATA_DIR || path.join(__dirname, 'data'));
+const avatarDir = path.join(dataDir, 'avatars');
 const errorLogPath = path.join(dataDir, 'error.log');
 const isProduction = process.env.NODE_ENV === 'production';
 initDb();
+fs.mkdirSync(avatarDir, { recursive: true });
 
 const sanitizeUser = (user) => {
   if (!user) {
@@ -262,7 +270,7 @@ if (googleClientId && googleClientSecret) {
   ));
 }
 
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 if (isProduction) {
@@ -292,6 +300,15 @@ app.use(express.static(STATIC_ROOT, {
   extensions: ['html'],
   maxAge: isProduction ? '1h' : 0,
 }));
+
+app.use('/media/avatars', express.static(avatarDir, {
+  maxAge: isProduction ? '7d' : 0,
+  immutable: isProduction,
+}));
+
+app.get('/profile/:id', (req, res) => {
+  res.sendFile(path.join(STATIC_ROOT, 'profile.html'));
+});
 
 app.get('/health', (req, res) => {
   let storageOk = true;
@@ -591,7 +608,7 @@ app.get('/api/me', (req, res) => {
 });
 
 app.get('/api/me/profile', ensureAuth, (req, res) => {
-  const profile = getPublicProfileById(req.user.id);
+  const profile = getPublicProfileById(req.user.id, req.user.id);
   return res.json({ profile });
 });
 
@@ -614,8 +631,8 @@ app.patch('/api/me/profile', ensureAuth, (req, res) => {
   }
 
   const avatarUrl = avatarUrlRaw ? avatarUrlRaw : null;
-  if (avatarUrl && !/^https?:\/\//i.test(avatarUrl)) {
-    return res.status(400).json({ error: 'Avatar URL must start with http:// or https://' });
+  if (avatarUrl && !/^https?:\/\//i.test(avatarUrl) && !avatarUrl.startsWith('/media/avatars/')) {
+    return res.status(400).json({ error: 'Avatar URL must be an absolute URL or /media/avatars/... path' });
   }
 
   const callsign = callsignRaw || null;
@@ -643,8 +660,81 @@ app.patch('/api/me/profile', ensureAuth, (req, res) => {
   return res.json({ profile });
 });
 
+app.post('/api/me/avatar', ensureAuth, (req, res) => {
+  const filename = String(req.body?.filename || '').trim();
+  const mimeType = String(req.body?.mimeType || '').trim().toLowerCase();
+  const dataBase64 = String(req.body?.dataBase64 || '').trim();
+
+  if (!filename || !mimeType || !dataBase64) {
+    return res.status(400).json({ error: 'Missing avatar upload fields' });
+  }
+
+  const allowedMimeToExt = {
+    'image/png': '.png',
+    'image/jpeg': '.jpg',
+    'image/webp': '.webp',
+    'image/gif': '.gif',
+  };
+
+  const ext = allowedMimeToExt[mimeType];
+  if (!ext) {
+    return res.status(400).json({ error: 'Only PNG, JPG, WEBP and GIF are allowed' });
+  }
+
+  let buffer;
+  try {
+    buffer = Buffer.from(dataBase64, 'base64');
+  } catch {
+    return res.status(400).json({ error: 'Invalid avatar data payload' });
+  }
+
+  const maxSizeBytes = 2 * 1024 * 1024;
+  if (!buffer || buffer.length === 0 || buffer.length > maxSizeBytes) {
+    return res.status(400).json({ error: 'Avatar file must be between 1 byte and 2 MB' });
+  }
+
+  const avatarFileName = `u${req.user.id}-${Date.now()}${ext}`;
+  const absoluteAvatarPath = path.join(avatarDir, avatarFileName);
+  fs.writeFileSync(absoluteAvatarPath, buffer);
+
+  const currentProfile = getPublicProfileById(req.user.id, req.user.id);
+  if (!currentProfile) {
+    return res.status(404).json({ error: 'Profile not found' });
+  }
+
+  if (currentProfile.avatar_url && currentProfile.avatar_url.startsWith('/media/avatars/')) {
+    const oldFile = path.basename(currentProfile.avatar_url);
+    const oldPath = path.join(avatarDir, oldFile);
+    if (fs.existsSync(oldPath)) {
+      fs.unlinkSync(oldPath);
+    }
+  }
+
+  const avatarUrl = `/media/avatars/${avatarFileName}`;
+  const profile = updateUserProfile({
+    userId: req.user.id,
+    displayName: currentProfile.display_name,
+    avatarUrl,
+    callsign: currentProfile.callsign,
+    bio: currentProfile.bio,
+  });
+
+  const freshUser = findUserById(req.user.id);
+  if (freshUser) {
+    req.user = freshUser;
+  }
+
+  recordAuditEvent({
+    actorUserId: req.user.id,
+    eventType: 'profile_avatar_upload',
+    payload: { mimeType, size: buffer.length },
+  });
+
+  return res.json({ profile, avatarUrl });
+});
+
 app.get('/api/profiles', ensureAuth, (req, res) => {
-  return res.json({ profiles: listPublicProfiles() });
+  return res.json({ profiles: listPublicProfiles(req.user.id) });
 });
 
 app.get('/api/profiles/:id', ensureAuth, (req, res) => {
@@ -653,12 +743,113 @@ app.get('/api/profiles/:id', ensureAuth, (req, res) => {
     return res.status(400).json({ error: 'Invalid profile id' });
   }
 
-  const profile = getPublicProfileById(profileId);
+  const profile = getPublicProfileById(profileId, req.user.id);
   if (!profile) {
     return res.status(404).json({ error: 'Profile not found' });
   }
 
   return res.json({ profile });
+});
+
+app.post('/api/profiles/:id/follow', ensureAuth, (req, res) => {
+  const targetUserId = Number(req.params.id);
+  const follow = Boolean(req.body?.follow);
+
+  if (!Number.isInteger(targetUserId) || targetUserId <= 0) {
+    return res.status(400).json({ error: 'Invalid profile id' });
+  }
+
+  const stats = setFollowState({
+    followerUserId: req.user.id,
+    targetUserId,
+    follow,
+  });
+
+  if (!stats) {
+    return res.status(400).json({ error: 'Could not update follow state' });
+  }
+
+  const profile = getPublicProfileById(targetUserId, req.user.id);
+  recordAuditEvent({
+    actorUserId: req.user.id,
+    eventType: follow ? 'profile_follow' : 'profile_unfollow',
+    payload: { targetUserId },
+  });
+
+  return res.json({ ok: true, profile, stats });
+});
+
+app.get('/api/me/contacts', ensureAuth, (req, res) => {
+  return res.json({ contacts: listContacts({ userId: req.user.id }) });
+});
+
+app.get('/api/medals', ensureAuth, (req, res) => {
+  return res.json({ medals: listUnitMedals() });
+});
+
+app.get('/api/audit/medals', ensureRole(['owner', 'admin', 'moderator']), (req, res) => {
+  const limit = Number(req.query?.limit || 100);
+  const entries = listMedalAuditEvents({ limit });
+  return res.json({ entries });
+});
+
+app.post('/api/profiles/:id/medals', ensureRole(['owner', 'admin', 'moderator']), (req, res) => {
+  const targetUserId = Number(req.params.id);
+  const medalId = String(req.body?.medalId || '').trim();
+
+  if (!Number.isInteger(targetUserId) || targetUserId <= 0) {
+    return res.status(400).json({ error: 'Invalid profile id' });
+  }
+
+  if (!medalId) {
+    return res.status(400).json({ error: 'Invalid medal id' });
+  }
+
+  const medals = awardUnitMedal({
+    targetUserId,
+    medalId,
+    grantedByUserId: req.user.id,
+  });
+
+  if (!medals) {
+    return res.status(400).json({ error: 'Could not award medal' });
+  }
+
+  const profile = getPublicProfileById(targetUserId, req.user.id);
+  recordAuditEvent({
+    actorUserId: req.user.id,
+    eventType: 'profile_medal_award',
+    payload: { targetUserId, medalId },
+  });
+
+  return res.json({ ok: true, profile, medals });
+});
+
+app.delete('/api/profiles/:id/medals/:medalId', ensureRole(['owner', 'admin', 'moderator']), (req, res) => {
+  const targetUserId = Number(req.params.id);
+  const medalId = String(req.params.medalId || '').trim();
+
+  if (!Number.isInteger(targetUserId) || targetUserId <= 0) {
+    return res.status(400).json({ error: 'Invalid profile id' });
+  }
+
+  if (!medalId) {
+    return res.status(400).json({ error: 'Invalid medal id' });
+  }
+
+  const medals = revokeUnitMedal({ targetUserId, medalId });
+  if (!medals) {
+    return res.status(404).json({ error: 'Medal assignment not found' });
+  }
+
+  const profile = getPublicProfileById(targetUserId, req.user.id);
+  recordAuditEvent({
+    actorUserId: req.user.id,
+    eventType: 'profile_medal_revoke',
+    payload: { targetUserId, medalId },
+  });
+
+  return res.json({ ok: true, profile, medals });
 });
 
 app.get('/api/users', ensureRole(['owner', 'admin']), (req, res) => {

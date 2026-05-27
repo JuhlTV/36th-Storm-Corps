@@ -6,6 +6,41 @@ const storePath = path.join(dataDir, 'portal-data.json');
 
 const nowIso = () => new Date().toISOString();
 
+const UNIT_MEDALS = [
+  {
+    id: 'storm-honor-star',
+    name: 'Storm Honor Star',
+    description: 'Auszeichnung fuer besonderes Pflichtbewusstsein im Einsatz.',
+    tier: 'gold',
+  },
+  {
+    id: 'vanguard-cross',
+    name: 'Vanguard Cross',
+    description: 'Verliehen fuer fuehrende Rolle in kritischen Operationen.',
+    tier: 'silver',
+  },
+  {
+    id: 'recon-wings',
+    name: 'Recon Wings',
+    description: 'Anerkennung fuer exzellente Aufklaerung und Lageberichte.',
+    tier: 'bronze',
+  },
+  {
+    id: 'shield-of-coruscant',
+    name: 'Shield of Coruscant',
+    description: 'Verliehen fuer Schutz und Sicherung der Einheit unter Druck.',
+    tier: 'gold',
+  },
+  {
+    id: 'discipline-ribbon',
+    name: 'Discipline Ribbon',
+    description: 'Konstante Disziplin und verlaesslicher Dienst ueber lange Zeit.',
+    tier: 'silver',
+  },
+];
+
+const unitMedalMap = new Map(UNIT_MEDALS.map((entry) => [entry.id, entry]));
+
 const toPublicProfile = (user) => {
   if (!user) {
     return null;
@@ -33,11 +68,15 @@ const createDefaultStore = () => ({
     users: 0,
     threads: 0,
     posts: 0,
+    follows: 0,
+    medalAssignments: 0,
     auditEvents: 0,
   },
   users: [],
   forumThreads: [],
   forumPosts: [],
+  follows: [],
+  userMedals: [],
   auditEvents: [],
 });
 
@@ -58,10 +97,15 @@ const readStore = () => {
     }
 
     return {
-      counters: parsed.counters || createDefaultStore().counters,
+      counters: {
+        ...createDefaultStore().counters,
+        ...(parsed.counters || {}),
+      },
       users: Array.isArray(parsed.users) ? parsed.users : [],
       forumThreads: Array.isArray(parsed.forumThreads) ? parsed.forumThreads : [],
       forumPosts: Array.isArray(parsed.forumPosts) ? parsed.forumPosts : [],
+      follows: Array.isArray(parsed.follows) ? parsed.follows : [],
+      userMedals: Array.isArray(parsed.userMedals) ? parsed.userMedals : [],
       auditEvents: Array.isArray(parsed.auditEvents) ? parsed.auditEvents : [],
     };
   } catch {
@@ -276,18 +320,237 @@ const updateUserProfile = ({ userId, displayName, avatarUrl, callsign, bio }) =>
   });
 };
 
-const getPublicProfileById = (userId) => {
-  const user = findUserById(userId);
-  return toPublicProfile(user);
+const mapUserMedals = ({ store, userId }) => {
+  const usersById = new Map(store.users.map((entry) => [entry.id, entry]));
+
+  return (store.userMedals || [])
+    .filter((entry) => entry.user_id === userId)
+    .map((entry) => {
+      const medal = unitMedalMap.get(entry.medal_id);
+      if (!medal) {
+        return null;
+      }
+
+      const grantedBy = usersById.get(entry.granted_by_user_id);
+      return {
+        medal_id: medal.id,
+        name: medal.name,
+        description: medal.description,
+        tier: medal.tier,
+        granted_at: entry.granted_at,
+        granted_by_user_id: entry.granted_by_user_id,
+        granted_by_display_name: grantedBy?.display_name || 'Unbekannt',
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => String(b.granted_at).localeCompare(String(a.granted_at)));
 };
 
-const listPublicProfiles = () => {
+const buildProfileStats = ({ store, userId, viewerUserId = null }) => {
+  const ownThreads = store.forumThreads.filter((thread) => thread.author_user_id === userId);
+  const ownPosts = store.forumPosts.filter((post) => post.author_user_id === userId);
+  const follows = Array.isArray(store.follows) ? store.follows : [];
+
+  const followerCount = follows.filter((entry) => entry.target_user_id === userId).length;
+  const followingCount = follows.filter((entry) => entry.follower_user_id === userId).length;
+  const isFollowing = Boolean(
+    viewerUserId
+      && follows.some((entry) => entry.follower_user_id === viewerUserId && entry.target_user_id === userId),
+  );
+
+  const timestamps = [];
+  ownThreads.forEach((thread) => {
+    if (thread.updated_at) {
+      timestamps.push(thread.updated_at);
+    }
+    if (thread.created_at) {
+      timestamps.push(thread.created_at);
+    }
+  });
+  ownPosts.forEach((post) => {
+    if (post.created_at) {
+      timestamps.push(post.created_at);
+    }
+  });
+
+  const validDates = timestamps
+    .map((value) => new Date(value))
+    .filter((date) => !Number.isNaN(date.getTime()))
+    .sort((a, b) => b - a);
+
+  return {
+    thread_count: ownThreads.length,
+    post_count: ownPosts.length,
+    follower_count: followerCount,
+    following_count: followingCount,
+    is_following: isFollowing,
+    last_forum_activity: validDates[0] ? validDates[0].toISOString() : null,
+    medals: mapUserMedals({ store, userId }),
+  };
+};
+
+const getPublicProfileById = (userId, viewerUserId = null) => {
+  const store = readStore();
+  const user = store.users.find((entry) => entry.id === userId);
+  if (!user) {
+    return null;
+  }
+
+  return {
+    ...toPublicProfile(user),
+    ...buildProfileStats({ store, userId: user.id, viewerUserId }),
+  };
+};
+
+const listPublicProfiles = (viewerUserId = null) => {
   const store = readStore();
 
   return [...store.users]
-    .map((user) => toPublicProfile(user))
+    .map((user) => ({
+      ...toPublicProfile(user),
+      ...buildProfileStats({ store, userId: user.id, viewerUserId }),
+    }))
     .filter(Boolean)
     .sort((a, b) => String(a.display_name || '').localeCompare(String(b.display_name || '')));
+};
+
+const setFollowState = ({ followerUserId, targetUserId, follow }) => {
+  if (!Number.isInteger(followerUserId) || !Number.isInteger(targetUserId)) {
+    return null;
+  }
+  if (followerUserId <= 0 || targetUserId <= 0 || followerUserId === targetUserId) {
+    return null;
+  }
+
+  return withStore((store) => {
+    const followerUser = store.users.find((entry) => entry.id === followerUserId);
+    const targetUser = store.users.find((entry) => entry.id === targetUserId);
+    if (!followerUser || !targetUser) {
+      return null;
+    }
+
+    if (!Array.isArray(store.follows)) {
+      store.follows = [];
+    }
+
+    const existingIndex = store.follows.findIndex((entry) => {
+      return entry.follower_user_id === followerUserId && entry.target_user_id === targetUserId;
+    });
+
+    if (follow) {
+      if (existingIndex < 0) {
+        store.counters.follows += 1;
+        store.follows.push({
+          id: store.counters.follows,
+          follower_user_id: followerUserId,
+          target_user_id: targetUserId,
+          created_at: nowIso(),
+        });
+      }
+    } else if (existingIndex >= 0) {
+      store.follows.splice(existingIndex, 1);
+    }
+
+    return buildProfileStats({ store, userId: targetUserId, viewerUserId: followerUserId });
+  });
+};
+
+const listContacts = ({ userId }) => {
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return [];
+  }
+
+  const store = readStore();
+  const follows = Array.isArray(store.follows) ? store.follows : [];
+  const followedIds = [...new Set(
+    follows
+      .filter((entry) => entry.follower_user_id === userId)
+      .map((entry) => entry.target_user_id),
+  )];
+
+  return followedIds
+    .map((targetUserId) => {
+      const user = store.users.find((entry) => entry.id === targetUserId);
+      if (!user) {
+        return null;
+      }
+
+      return {
+        ...toPublicProfile(user),
+        ...buildProfileStats({ store, userId: user.id, viewerUserId: userId }),
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => String(a.display_name || '').localeCompare(String(b.display_name || '')));
+};
+
+const listUnitMedals = () => UNIT_MEDALS.map((entry) => ({ ...entry }));
+
+const awardUnitMedal = ({ targetUserId, medalId, grantedByUserId }) => {
+  if (!Number.isInteger(targetUserId) || targetUserId <= 0) {
+    return null;
+  }
+  if (!Number.isInteger(grantedByUserId) || grantedByUserId <= 0) {
+    return null;
+  }
+  if (!unitMedalMap.has(medalId)) {
+    return null;
+  }
+
+  return withStore((store) => {
+    const targetUser = store.users.find((entry) => entry.id === targetUserId);
+    const grantedByUser = store.users.find((entry) => entry.id === grantedByUserId);
+    if (!targetUser || !grantedByUser) {
+      return null;
+    }
+
+    if (!Array.isArray(store.userMedals)) {
+      store.userMedals = [];
+    }
+
+    const alreadyAssigned = store.userMedals.some((entry) => {
+      return entry.user_id === targetUserId && entry.medal_id === medalId;
+    });
+
+    if (!alreadyAssigned) {
+      store.counters.medalAssignments += 1;
+      store.userMedals.push({
+        id: store.counters.medalAssignments,
+        user_id: targetUserId,
+        medal_id: medalId,
+        granted_by_user_id: grantedByUserId,
+        granted_at: nowIso(),
+      });
+    }
+
+    return mapUserMedals({ store, userId: targetUserId });
+  });
+};
+
+const revokeUnitMedal = ({ targetUserId, medalId }) => {
+  if (!Number.isInteger(targetUserId) || targetUserId <= 0) {
+    return null;
+  }
+  if (!unitMedalMap.has(medalId)) {
+    return null;
+  }
+
+  return withStore((store) => {
+    if (!Array.isArray(store.userMedals)) {
+      store.userMedals = [];
+    }
+
+    const before = store.userMedals.length;
+    store.userMedals = store.userMedals.filter((entry) => {
+      return !(entry.user_id === targetUserId && entry.medal_id === medalId);
+    });
+
+    if (before === store.userMedals.length) {
+      return null;
+    }
+
+    return mapUserMedals({ store, userId: targetUserId });
+  });
 };
 
 const clearLocalCredentials = ({ userId }) => {
@@ -308,6 +571,12 @@ const clearLocalCredentials = ({ userId }) => {
 const deleteUserById = ({ userId }) => {
   withStore((store) => {
     store.users = store.users.filter((entry) => entry.id !== userId);
+    store.follows = (store.follows || []).filter((entry) => {
+      return entry.follower_user_id !== userId && entry.target_user_id !== userId;
+    });
+    store.userMedals = (store.userMedals || []).filter((entry) => {
+      return entry.user_id !== userId && entry.granted_by_user_id !== userId;
+    });
     return null;
   });
 };
@@ -482,6 +751,39 @@ const recordAuditEvent = ({ actorUserId = null, eventType, payload }) => {
   });
 };
 
+const listMedalAuditEvents = ({ limit = 100 } = {}) => {
+  const store = readStore();
+  const usersById = new Map(store.users.map((entry) => [entry.id, entry]));
+  const safeLimit = Math.max(1, Math.min(Number(limit) || 100, 500));
+
+  return [...(store.auditEvents || [])]
+    .filter((entry) => entry.event_type === 'profile_medal_award' || entry.event_type === 'profile_medal_revoke')
+    .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))
+    .slice(0, safeLimit)
+    .map((entry) => {
+      let payload = {};
+      try {
+        payload = JSON.parse(entry.payload || '{}');
+      } catch {
+        payload = {};
+      }
+
+      const actor = usersById.get(entry.actor_user_id);
+      const target = usersById.get(payload.targetUserId);
+
+      return {
+        id: entry.id,
+        event_type: entry.event_type,
+        created_at: entry.created_at,
+        medal_id: payload.medalId || null,
+        actor_user_id: entry.actor_user_id || null,
+        actor_display_name: actor?.display_name || 'Unbekannt',
+        target_user_id: payload.targetUserId || null,
+        target_display_name: target?.display_name || 'Unbekannt',
+      };
+    });
+};
+
 module.exports = {
   initDb,
   getDatabase,
@@ -499,6 +801,11 @@ module.exports = {
   updateUserProfile,
   getPublicProfileById,
   listPublicProfiles,
+  setFollowState,
+  listContacts,
+  listUnitMedals,
+  awardUnitMedal,
+  revokeUnitMedal,
   touchUserLogin,
   listUsers,
   setUserRole,
@@ -509,4 +816,5 @@ module.exports = {
   createPost,
   setThreadLocked,
   recordAuditEvent,
+  listMedalAuditEvents,
 };

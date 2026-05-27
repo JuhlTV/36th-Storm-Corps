@@ -164,12 +164,27 @@
               <input id="forum-profile-avatar" type="url" maxlength="500" placeholder="https://..." />
             </label>
             <label>
+              <span>Profilbild Datei</span>
+              <input id="forum-profile-avatar-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+            </label>
+            <button class="btn btn-ghost" type="button" id="forum-profile-avatar-upload">Datei hochladen</button>
+            <label>
               <span>Bio</span>
               <textarea id="forum-profile-bio" rows="5" maxlength="400" placeholder="Kurzprofil, Spezialisierung, Squad-Rolle..."></textarea>
             </label>
             <button class="btn btn-primary" type="submit" id="forum-profile-save">Profil speichern</button>
             <p class="forum-note" id="forum-profile-note">Profil noch nicht geladen.</p>
           </form>
+
+          <div class="forum-contacts" id="forum-contacts-panel">
+            <div class="forum-contacts-head">
+              <h3>Meine Kontakte</h3>
+              <button class="btn btn-ghost" type="button" id="forum-contacts-refresh">Aktualisieren</button>
+            </div>
+            <div id="forum-contacts-list" class="forum-contacts-list">
+              <p class="forum-empty">Keine Kontakte vorhanden.</p>
+            </div>
+          </div>
         </article>
 
         <article class="forum-panel">
@@ -206,6 +221,17 @@
           </div>
           <div class="forum-admin-actions">
             <button class="btn btn-ghost" type="button" id="forum-admin-refresh">Nutzer aktualisieren</button>
+          </div>
+        </article>
+
+        <article class="forum-panel forum-admin-panel">
+          <h2>Medaillen Audit</h2>
+          <p class="forum-note">Zeigt, wer welche Einheits-Medaillie vergeben oder entzogen hat.</p>
+          <div class="forum-admin-actions">
+            <button class="btn btn-ghost" type="button" id="forum-audit-refresh">Audit aktualisieren</button>
+          </div>
+          <div id="forum-audit-list" class="forum-audit-list">
+            <p class="forum-empty">Noch keine Audit-Eintraege geladen.</p>
           </div>
         </article>
       </div>
