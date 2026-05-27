@@ -91,9 +91,16 @@ const revealForumSections = () => {
 };
 
 const apiFetch = async (url, options = {}) => {
+  const method = String(options.method || 'GET').toUpperCase();
+  const shouldSendJsonHeader = method !== 'GET' && method !== 'HEAD' && options.body !== undefined;
+  const mergedHeaders = {
+    ...(shouldSendJsonHeader ? { 'Content-Type': 'application/json' } : {}),
+    ...(options.headers || {}),
+  };
+
   try {
     const response = await window.StormCorpsApi.apiFetchRaw(url, {
-      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+      ...(Object.keys(mergedHeaders).length ? { headers: mergedHeaders } : {}),
       ...options,
     });
 
