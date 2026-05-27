@@ -1,0 +1,3 @@
+# Runtime user data must stay local and never be pushed.
+portal-server/data/**
+!portal-server/data/.gitkeep
